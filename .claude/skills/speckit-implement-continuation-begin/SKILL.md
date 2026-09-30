@@ -1,0 +1,1 @@
+../../../.specify/extensions/implement-continuation/.specify-dev/agent-commands/claude/speckit-implement-continuation-begin/SKILL.md

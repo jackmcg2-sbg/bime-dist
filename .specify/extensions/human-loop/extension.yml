@@ -1,0 +1,40 @@
+schema_version: "1.0"
+
+extension:
+  id: human-loop
+  name: "Human Loop Orchestrator"
+  version: "0.3.0"
+  description: "Bundle the core Spec Kit commands behind sparse human gates — including the Gate 2A architecture-delta review that must pass before tasks are generated — subordinate to the project constitution. Agent-neutral: the authoritative definition is workflow.md and per-agent skill files are thin pointers to it."
+  author: local
+  repository: https://example.invalid/local/human-loop-claude
+  license: MIT
+
+requires:
+  speckit_version: ">=0.2.0"
+  commands:
+    - speckit.constitution
+    - speckit.specify
+    - speckit.clarify
+    - speckit.checklist
+    - speckit.plan
+    - speckit.tasks
+    - speckit.analyze
+    - speckit.implement
+
+provides:
+  commands:
+    - name: speckit.human-loop
+      file: commands/speckit.human-loop.md
+      description: "Run bundled core Spec Kit phases with sparse human gates and explicit, constitution-compliant approval before implementation."
+  workflow:
+    file: workflow.md
+    description: "Authoritative, agent-neutral definition of the bundled human-gated workflow. Per-agent skill files under .claude/skills/ are thin pointers to this file and must not restate it (constitution Governance: Agent Instruction Files Delegate To Spec Kit)."
+
+# This orchestrator intentionally registers NO before_/after_ hooks. It is invoked
+# explicitly by the user and calls the core commands itself; wiring it into phase
+# hooks would cause recursive invocation. Per-phase hooks (e.g. git auto-commit)
+# from other extensions still fire on the embedded core commands.
+tags:
+  - workflow
+  - human-in-the-loop
+  - spec-driven
