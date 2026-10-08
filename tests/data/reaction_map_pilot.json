@@ -1,0 +1,74 @@
+{
+ "_comment": "Feature 001 fixture. Pilot reactions converted from /media/JACK/repos/ctf/rxns/moiety_rxns/atomMapped_std/<id>.rxn with BIME MolEditor._parseMolV2000 + explicit-H strip + SmilesWriter (one-off, see implementation receipt). baseline = BIME 3.0.3 measurements (T004).",
+ "reactions": [
+  {
+   "id": "GDA1_HPRNStlr",
+   "smiles": "[C:49]1([CH2:83][CH:77]([OH:79])[CH:67]([NH:69][C:71]([CH3:75])=[O:72])[CH:51]([O:50]1)[CH:53]([OH:54])[CH:56]([OH:59])[CH2:61][OH:63])([O:47][CH:45]6[CH:90]([OH:92])[CH:65]([O:64][CH:62]2[CH:98]([OH:103])[CH:105]([OH:107])[CH:57]([O:55][CH2:52][CH:6]([NH:4][C:2]([*:1])=[O:3])[CH:8]([OH:10])[CH:13]=[CH:16][CH2:19][CH2:23][CH2:28][CH2:31][CH2:33][CH2:35][CH2:38][CH2:39][CH2:41][CH2:42][CH2:44][CH2:46][CH3:48])[O:58][CH:60]2[CH2:109][OH:111])[O:66][CH:68]([CH2:95][OH:97])[CH:70]6[O:73][CH:74]5[O:76][CH:78]([CH2:40][OH:43])[CH:80]([OH:81])[CH:82]([O:84][CH:85]4[O:89][CH:91]([CH2:27][OH:29])[CH:93]([OH:94])[CH:96]([O:99][C:100]3([CH2:20][CH:17]([OH:18])[CH:9]([NH:11][C:12]([CH3:15])=[O:14])[CH:102]([O:101]3)[CH:104]([OH:106])[CH:108]([OH:110])[CH2:5][OH:7])[C:21]([O-:24])=[O:22])[CH:25]4[OH:26])[CH:30]5[NH:32][C:34]([CH3:37])=[O:36])[C:86]([O-:88])=[O:87]>>[C:49]1([CH2:83][CH:77]([OH:79])[CH:67]([NH:69][C:71]([CH3:75])=[O:72])[CH:51]([O:50]1)[CH:53]([OH:54])[CH:56]([OH:59])[CH2:61][OH:63])([O:47][CH:45]6[CH:90]([OH:92])[CH:65]([O:64][CH:62]2[CH:98]([OH:103])[CH:105]([OH:107])[CH:57]([O:55][CH2:52][CH:6]([NH:4][C:2]([*:1])=[O:3])[CH:8]([OH:10])[CH:13]=[CH:16][CH2:19][CH2:23][CH2:28][CH2:31][CH2:33][CH2:35][CH2:38][CH2:39][CH2:41][CH2:42][CH2:44][CH2:46][CH3:48])[O:58][CH:60]2[CH2:109][OH:111])[O:66][CH:68]([CH2:95][OH:97])[CH:70]6[O:73][CH:74]5[O:76][CH:78]([CH2:40][OH:43])[CH:80]([OH:81])[CH:82]([O:84][CH:85]4[O:89][CH:91]([CH2:27][OH:29])[CH:93]([OH:94])[CH:96]([O:99][C:100]3([CH2:20][CH:17]([OH:18])[CH:9]([NH:11][C:12]([CH3:15])=[O:14])[CH:102]([O:101]3)[CH:104]([OH:106])[CH:108]([OH:110])[CH2:5][OH:7])[C:21]([O-:24])=[O:22])[CH:25]4[OH:26])[CH:30]5[NH:32][C:34]([CH3:37])=[O:36])[C:86]([O-:88])=[O:87]"
+  },
+  {
+   "id": "GGH_10FTHF7GLUl",
+   "smiles": "[OH2:89].[N:21]([CH2:19][CH:17]1[CH2:15][NH:12][C:8]=2[NH:9][C:2](=[NH:1])[N:3]=[C:4]([OH:5])[C:6]=2[NH:18]1)([CH:85]=[O:87])[c:22]=3[cH:23][cH:27][c:28]([cH:80][cH:81]=3)[C:29](=[O:31])[NH:32][CH:33]([CH2:38][CH2:39][C:40]([O-:42])=[N:43][CH:44]([CH2:68][CH2:70][C:75]([O-:77])=[O:76])[C:46]([O-:49])=[N:50][CH:51]([CH2:54][CH2:59][C:61]([O-:66])=[O:62])[C:53]([OH:52])=[N:55][CH:56]([CH2:36][CH2:41][C:45]([O-:48])=[O:47])[C:57]([OH:30])=[N:58][CH:60]([CH2:16][CH2:20][C:24]([O-:26])=[O:25])[C:63]([OH:14])=[N:64][CH:65]([CH2:88][CH2:7][C:10]([O-:13])=[O:11])[C:67]([OH:86])=[N:69][CH:71]([CH2:78][CH2:79][C:82]([O-:84])=[O:83])[C:72]([OH:74])=[O:73])[C:34]([OH:37])=[O:35]>>[C:72]([OH:74])(=[O:73])[CH:71]([NH2:69])[CH2:78][CH2:79][C:82]([O-:84])=[O-:83].[N:21]([CH2:19][CH:17]1[CH2:15][NH:12][C:8]=2[NH:9][C:2](=[NH:1])[N:3]=[C:4]([O-:5])[C:6]=2[NH:18]1)([CH:85]=[O:87])[c:22]=3[cH:23][cH:27][c:28]([cH:80][cH:81]=3)[C:29](=[O:31])[NH:32][CH:33]([CH2:38][CH2:39][C:40]([O-:42])=[N:43][CH:44]([CH2:68][CH2:70][C:75]([O-:77])=[N:50][CH:59]([CH2:54][CH2:51][C:53]([O-:52])=[N:55][CH:56]([CH2:36][CH2:41][C:45]([O-:48])=[N:58][CH:20]([CH2:16][CH2:60][C:63]([O-:14])=[N:64][CH:65]([CH2:88][CH2:7][C:10]([O-:13])=[O:11])[C:67]([OH:86])=[O:89])[C:24]([OH:26])=[O:25])[C:57]([OH:30])=[O:76])[C:61]([OH:66])=[O:62])[C:46]([OH:49])=[O:47])[C:34]([OH:37])=[O:35]"
+  },
+  {
+   "id": "CE2872DIOer",
+   "smiles": "[P:23]([O-:25])(=[O:24])([O:26][CH2:27][CH:28]1[O:30][CH:33]([CH:48]([O:2][P:4]([O-:7])([O-:9])=[O:6])[CH:11]1[OH:17])[n:35]3[cH:44][n:43][c:41]=2[c:40]([NH2:45])[n:39][cH:38][n:37][c:36]=23)[O:21][P:16]([O-:20])(=[O:18])[O:15][CH2:14][CH:10]4[O:8][CH:5]([CH:3]([OH:1])[CH:12]4[OH:13])[N:19]5[CH:47]=[CH:46][CH2:42][C:29](=[CH:22]5)[C:31]([NH2:34])=[O:32].[c:55]1([cH:54][c:52]([I:53])[c:51]([OH:50])[c:68]([I:70])[cH:67]1)[O:56][c:58]=2[cH:60][cH:62][c:64]([CH2:69][CH:49]([NH2:63])[C:57]([OH:61])=[O:59])[cH:65][cH:66]=2>>[I-:70].[P:16]([O-:20])(=[O:18])([O:15][CH2:14][CH:10]1[O:8][CH:5]([CH:3]([OH:1])[CH:12]1[OH:13])[n+:19]=2[cH:47][cH:46][cH:42][c:29]([cH:22]=2)[C:31]([NH2:34])=[O:32])[O:21][P:23]([O-:25])(=[O:24])[O:26][CH2:27][CH:28]3[O:30][CH:33]([CH:48]([O:2][P:4]([O-:7])([O-:9])=[O:6])[CH:11]3[OH:17])[N:35]5[CH:44]=[N:43][c:41]4[c:40]([NH2:45])[n:39][cH:38][n:37][c:36]45.[c:58]=1([cH:60][cH:62][c:64]([CH2:69][CH:49]([NH2:63])[C:57]([OH:61])=[O:59])[cH:65][c:66]=1[I:53])[O:56][c:55]=2[cH:54][cH:52][c:51]([OH:50])[cH:68][cH:67]=2"
+  }
+ ],
+ "explicitH": {
+  "id": "explicit_h_stereo",
+  "smiles": "[H][C@](N)(C)C(=O)OC.[H]O[H]>>[H][C@](N)(C)C(=O)O.[H]OC",
+  "explicitH": true
+ },
+ "baseline": {
+  "GDA1_HPRNStlr": {
+   "maps": 222,
+   "labels": 138,
+   "bonds": 246,
+   "mapMap": 9,
+   "mapLabel": 70,
+   "mapBond": 193,
+   "knockoutRects": 114,
+   "mapMapU": 0,
+   "mapLabelU": 21,
+   "mapBondU": 62,
+   "crowdedMaps": 82
+  },
+  "GGH_10FTHF7GLUl": {
+   "maps": 178,
+   "labels": 121,
+   "bonds": 224,
+   "mapMap": 0,
+   "mapLabel": 28,
+   "mapBond": 101,
+   "knockoutRects": 89,
+   "mapMapU": 0,
+   "mapLabelU": 10,
+   "mapBondU": 50,
+   "crowdedMaps": 44
+  },
+  "CE2872DIOer": {
+   "maps": 140,
+   "labels": 94,
+   "bonds": 184,
+   "mapMap": 1,
+   "mapLabel": 45,
+   "mapBond": 132,
+   "knockoutRects": 75,
+   "mapMapU": 0,
+   "mapLabelU": 16,
+   "mapBondU": 44,
+   "crowdedMaps": 58
+  }
+ },
+ "pinnedSingleMolecule": {
+  "phenol.toSVG": "276fefaab3505f45eac004ca3f4c5fc592315ae1eac2e606784b434ffacf3e89",
+  "phenol.toPublicationSVG": "a7df69e0eb82facd4e6b8fca3c8830ba2b1ad727f33ecdd2c25abd18693d8811",
+  "phenol.toPrintSVG": "3198a0050c86a23cd4b672ae3eb9428390fd6572eb2fdd94f9f11763cb481f46",
+  "pyridine.toSVG": "b37cebc6b0e5d3df04d8e40a3a4b7010c294abab6c04b9fc8e16b427618200e5",
+  "pyridine.toPublicationSVG": "b2a9c6907265732aa1e97088a39ac1cdf657de38346db3830697265fa504ed6e",
+  "pyridine.toPrintSVG": "4ce92aebffd9e72be017e4c1d5e951f8bb25dc02891e7ae8f9775bdefd0f7782",
+  "chlorobenzene.toSVG": "ddfbcb76495940d1b76e92815e7aed49e0bc82ba4f8734802f872d4617b0d530",
+  "chlorobenzene.toPublicationSVG": "b0ca9f48ce09262666fa05999b5f699058225ab95c035cfa3b55c18c567bfd38",
+  "chlorobenzene.toPrintSVG": "787c6228642e67d77b714f033f14d37595a7ad7cbf668f4e87f5cd2c5f5599ec"
+ }
+}

@@ -260,6 +260,9 @@ function cmdAam(args) {
     if (rxn.parseErrors && rxn.parseErrors.length) {
         die('aam: parse failed: ' + rxn.parseErrors.join('; '));
     }
+    // v3.1.0: --heavy-atoms folds explicit H atoms into their neighbours BEFORE
+    // mapping (any output format), so the figure/report covers heavy atoms only.
+    if (args.flags['heavy-atoms']) { rxn.removeExplicitHydrogens(); }
     var opts = {};
     if (args.flags['no-chemistry-aware']) { opts.chemistryAware = false; }
     if (args.flags['timeout-ms']) { opts.timeoutMs = parseInt(args.flags['timeout-ms'], 10); }
@@ -684,6 +687,7 @@ var HELP_BY_CMD = {
          '    --timeout-ms N       Per-call timeout for the AAM solver (default: 2000).\n' +
          '    --keep-mapping       Use the input :n atom-map numbers as-is (no re-solve);\n' +
          '                         render/report a curated mapping instead of remapping it.\n' +
+         '    --heavy-atoms        Strip explicit H atoms before mapping (heavy-atom figure).\n' +
          '  SVG (v2.4.13) — a publication-quality mapped-reaction figure: colour mol\n' +
          '  + atom-atom map numbers + bond changes (red cleaved / green formed /\n' +
          '  amber order) + sub-fragment trace colouring. Auto-sized; white background.\n' +

@@ -22,8 +22,7 @@ tools/chem-data-restoration-report.md
 # trained weights (editor/ml-depict-weights.{json,js}) are committed.
 tools/ml-depict-dataset.json
 
-# Claude Code working directory (worktrees, agent state)
-.claude/*
+# Claude Code working directory (worktrees, agent state)*
 !.claude/skills/
 
 # Local-only PDFs (e.g. third-party metabolic-pathway maps used as import
@@ -38,3 +37,6 @@ package-lock.json
 
 # public-build output (pathway-stripped), regenerated at release-sync time
 dist-public/
+
+bime_pilot/
+.venv

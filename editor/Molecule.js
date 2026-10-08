@@ -199,6 +199,50 @@
         delete this._adjacency[atomId];
     };
 
+    /**
+     * v3.1.0: fold explicit hydrogen atoms into their heavy neighbour's H count
+     * (heavy-atom depiction; call on a parsed reaction BEFORE RDT.mapReaction).
+     *
+     * An H is removed only when it is unremarkable: no isotope, no charge, and
+     * exactly one neighbour which is a heavy atom (so H2, H+, D/T and bridging
+     * hydrides are kept as drawn). A neighbour with an explicit H count gets
+     * +1; an auto-H neighbour stays auto. Chirality is kept: atom.chirality is
+     * defined against getNeighbors() order with the implicit H last, so moving
+     * the H from neighbour slot k (of n) to last flips @/@@ when n-1-k is odd.
+     * Surviving atom and bond ids are unchanged.
+     *
+     * @returns {number} the number of hydrogen atoms removed
+     */
+    Molecule.prototype.removeExplicitHydrogens = function() {
+        var self = this;
+        var doomed = this.atoms.filter(function(h) {
+            if (h.symbol !== 'H' || h.isotope > 0 || h.charge !== 0) return false;
+            var nbs = self.getNeighbors(h.id);
+            if (nbs.length !== 1) return false;
+            var heavy = self.getAtom(nbs[0]);
+            return !!heavy && heavy.symbol !== 'H';
+        }).map(function(h) { return h.id; });
+
+        for (var i = 0; i < doomed.length; i++) {
+            var hId = doomed[i];
+            var heavy = this.getAtom(this.getNeighbors(hId)[0]);
+            if (heavy.chirality) {
+                // A chiral auto-H atom is pinned first so the frame stays explicit.
+                if (heavy.hydrogens < 0) heavy.hydrogens = this.calcHydrogens(heavy.id);
+                if (heavy.hydrogens === 0) {
+                    var order = this.getNeighbors(heavy.id);
+                    var k = order.indexOf(hId);
+                    if ((order.length - 1 - k) % 2 === 1) {
+                        heavy.chirality = (heavy.chirality === '@') ? '@@' : '@';
+                    }
+                }
+            }
+            if (heavy.hydrogens >= 0) heavy.hydrogens++;
+            this.removeAtom(hId);
+        }
+        return doomed.length;
+    };
+
     Molecule.prototype.getAtom = function(atomId) {
         return this._atomMap[atomId] || null;
     };

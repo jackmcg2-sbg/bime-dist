@@ -4,6 +4,27 @@ Notable changes per release. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Heavy-atom reaction figures.** `bime aam --heavy-atoms` strips explicit
+  hydrogen atoms before mapping, for any output format, so figures and reports
+  cover heavy atoms only. Isotopic and charged H, H₂/H⁺ and stereocentres are
+  preserved. For library use, call `Molecule.prototype.removeExplicitHydrogens()`
+  before `RDT.mapReaction`.
+
+### Changed
+
+- **Legible mapped-reaction figures.** In `bime aam --format svg` /
+  `ImageExport.toReactionMapSVG`, atom labels no longer sit in white boxes. Each
+  label and map number is contrast-checked (WCAG 3:1) against the coloured halo
+  beneath it and darkened within its own hue only when needed. Map numbers are
+  placed at the least-cluttered position around their atom instead of a fixed
+  spot below it, so they no longer overlap each other, labels or bonds, except
+  where the 2D layout itself crowds atoms together. Bonds now stop clear of
+  labels. Single-molecule SVG export is unchanged.
+
 ## [3.0.3] — 2026-07-12
 
 A major release: teaching-grade chemical correctness across the built-in

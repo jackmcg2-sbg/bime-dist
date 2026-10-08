@@ -1,0 +1,64 @@
+# Architecture delta — Feature 001 reaction-map-label-legibility
+# Constitution Principle V-A. Authoritative; plan.md "Architecture Impact" summarises it.
+feature: 001-reaction-map-label-legibility
+base: 84a44be  # BIME v3.0.3
+date: 2026-10-08
+
+modules:
+  added: []
+  modified:
+    - path: editor/ImageExport.js
+      change: >
+        _buildSVGImpl gains a branch gated on internal opts.legibleLabels (set only by
+        toReactionMapSVG): per-text contrast check + same-hue remedy/patch fallback
+        replacing the unconditional knockout rect; collision-scored map-number placement.
+        New private helpers exposed read-only as ImageExport._legibility (tests only).
+        toReactionMapSVG accepts optional options.minContrast (default 3).
+    - path: editor/Molecule.js
+      change: new public method Molecule.prototype.removeExplicitHydrogens()
+    - path: tools/bime-cli.js
+      change: cmdAam honours --heavy-atoms (all formats) before mapping; aam help line
+    - path: tests/test-manifest.js
+      change: register tests/test_v3_1_0_reaction_map_legibility.js
+  removed: []
+
+dependency_edges:
+  added: []        # CLI->Molecule, ImageExport->Molecule already exist
+  removed: []
+
+public_interfaces:
+  cli:
+    - flag: "bime aam --heavy-atoms"
+      kind: addition
+      compatible: true
+    - command: "bime aam --format svg"
+      kind: output-change
+      compatible: "visual change, approved default-on at clarify 2026-10-08; SVG remains valid"
+  embed_api:
+    - symbol: Molecule.prototype.removeExplicitHydrogens
+      kind: addition
+      compatible: true
+    - symbol: ImageExport.toReactionMapSVG
+      kind: behaviour-change + optional option minContrast
+      compatible: "signature unchanged"
+    - symbol: ImageExport._legibility
+      kind: internal (underscore) — not public API
+  file_formats: []   # no SMILES/SMARTS/MOL/SDF change; SVG element vocabulary unchanged (rect/text)
+
+persistent_data_structures: []
+
+pinned_unchanged:
+  - ImageExport.toSVG / toPublicationSVG / toPrintSVG output (byte-identical)
+  - tools/editor-files.js, all HTML page script lists, dist/*
+
+forbidden_edges:
+  - "Molecule.js -> ImageExport.js (core data must not depend on export)"
+  - "ImageExport.js -> tools/* (library must not depend on CLI)"
+
+conformance:
+  constitution: "I, II, III, IV, V — conforming (see plan.md Constitution Check)"
+  adrs: "none exist under docs/decisions/; none required (no new module family, layer, dependency direction, shared representation, or accepted debt)"
+  cycles: none
+  smallest_conforming_alternative: "this proposal"
+
+verdict: APPROVE   # Gate 2A, 2026-10-08, by the user (jackmcg2)
