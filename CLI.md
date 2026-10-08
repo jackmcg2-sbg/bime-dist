@@ -165,6 +165,10 @@ publication-ready figure: reactants, arrow, and products laid out as a
 scheme, with atom-atom map numbers, bond-change highlighting (red cleaved,
 green formed, amber order change), sub-fragment trace colouring, and a
 per-component compound-name caption. Auto-sized, white background by default.
+Atom labels and map numbers are contrast-checked against the colour beneath
+them: a label that is already readable gets no background box, and a faint one is
+darkened within its own hue. Each map number is placed at the least-cluttered spot
+around its atom, clear of other numbers, labels and bonds.
 
 ```bash
 bime aam 'CCO.CC(=O)O>>CCOC(=O)C.O' --format svg --out esterification.svg
@@ -175,10 +179,14 @@ bime aam 'CCO>>CC=O' --format svg --ids        # caption with KEGG ids
 # Already have a mapped reaction? Render it WITHOUT re-mapping —
 # the input :n atom-map numbers are used verbatim:
 bime aam '[CH3:1][CH2:2][OH:3]>>[CH3:1][CH:2]=[O:3]' --format svg --keep-mapping --out fig.svg
+
+# Input written with explicit hydrogens? Map and draw the heavy atoms only:
+bime aam '[H]OC(=O)C.[H]OCC>>CC(=O)OCC.[H]O[H]' --heavy-atoms --format svg --out heavy.svg
 ```
 
 | Flag | Effect |
 |---|---|
+| `--heavy-atoms` | strip explicit H atoms before mapping, for any `--format`; keeps D/T, charged H, H₂/H⁺ and stereo |
 | `--screen` | on-screen look instead of the print preset |
 | `--transparent` | transparent background (drop onto any page) |
 | `--reaction-center` | add dashed reaction-centre rings |

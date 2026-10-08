@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "extensions": {
+    "git": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:89711dec9716473fba4afc54f7224bcb28ebd3c55fb5aaa30df854ab02b07a75",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.git.feature",
+          "speckit.git.validate",
+          "speckit.git.remote",
+          "speckit.git.initialize",
+          "speckit.git.commit"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-09-30T13:32:34.380688+00:00"
+    },
+    "implement-continuation": {
+      "version": "0.2.0",
+      "source": "local",
+      "manifest_hash": "sha256:b74f959a3523fe1dd924cdc77b6feb99aa486d9fbf2389a0b7276dda77f80ee9",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.implement-continuation.begin",
+          "speckit.implement-continuation.continue"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-09-30T13:34:59.082380+00:00"
+    },
+    "human-loop": {
+      "version": "0.3.0",
+      "source": "local",
+      "manifest_hash": "sha256:413ed9ec4c852e79cd8e3eb141d08c89336419780fac3c4153f2515f5ece0810",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.human-loop.human-loop"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-09-30T13:35:06.300455+00:00"
+    }
+  }
+}

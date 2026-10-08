@@ -1,0 +1,66 @@
+schema_version: "1.0"
+
+extension:
+  id: implement-continuation
+  name: "Implementation Continuation"
+  version: "0.2.0"
+  description: "Decide, in Spec Kit rather than in an agent harness, whether an authorised implementation run is finished. While unchecked tasks remain in tasks.md and no stop-and-report condition has fired, implementation is not finished and MUST continue. Terminates at Gate 3, never past it."
+  author: local
+  repository: https://example.invalid/local/implement-continuation
+  license: MIT
+
+requires:
+  speckit_version: ">=0.2.0"
+  commands:
+    - speckit.implement
+
+provides:
+  commands:
+    - name: speckit.implement-continuation.begin
+      file: commands/speckit.implement-continuation.begin.md
+      description: "Mark an authorised implementation run as in flight."
+    - name: speckit.implement-continuation.continue
+      file: commands/speckit.implement-continuation.continue.md
+      description: "Evaluate whether implementation is finished; resume it if not, or hand to Gate 3 if it is."
+
+hooks:
+  before_implement:
+    command: speckit.implement-continuation.begin
+    optional: false
+    description: "Mark the authorised implementation run as in flight"
+  after_implement:
+    command: speckit.implement-continuation.continue
+    optional: false
+    description: "Resume implementation while approved tasks remain unchecked"
+
+# Ordering note for .specify/extensions.yml: the after_implement entry MUST come
+# after the git auto-commit entry, so each continuation iteration is committed
+# before the next begins and an interrupted run resumes from committed state
+# rather than from a dirty tree.
+#
+# Both hooks are mandatory (optional: false) so that settings.auto_execute_hooks
+# dispatches them without a prompt. A continuation that had to be approved each
+# time would reintroduce the pause it exists to remove.
+#
+# Enabling this extension is a governance change, not a convenience toggle: it
+# alters how long an already authorised implementation run proceeds without a
+# human present. It crosses no gate — Gates E, 1, 2A and 2 all precede
+# implementation, and Gate 3 follows it and is where continuation stops.
+
+tags:
+  - workflow
+  - implementation
+  - unattended
+
+config:
+  defaults:
+    # Stop if a full implement cycle does not reduce the unchecked-task count.
+    # Progress, not a turn counter, is the termination condition.
+    require_progress_each_iteration: true
+    # Upper bound on continuation iterations for one authorised run.
+    max_iterations: 40
+    # State flag only: "a run was authorised and has not been declared finished".
+    # Created by before_implement, removed by the continuation command on every
+    # path that decides to stop. A trigger outside Spec Kit may test for this
+    # file; it may not interpret anything else.
+    in_flight_marker: .specify/.implement-in-flight

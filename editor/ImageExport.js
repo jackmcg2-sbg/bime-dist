@@ -160,9 +160,166 @@
     }
 
     // ---------------------------------------------------------------------------
+    // v3.1.0: label legibility for the mapped-reaction figure. Pure helpers —
+    // WCAG 2.x relative luminance / contrast, halo compositing, and a same-hue
+    // lightness remedy for text that is too faint on the fill beneath it.
+    // Used only on the reaction-map path (opts.legibleLabels); exposed
+    // read-only as ImageExport._legibility for tests.
+    // ---------------------------------------------------------------------------
+    var LEGIBLE_MIN_CONTRAST = 3;      // WCAG minimum for bold/large text
+    var LEGIBLE_L_MIN = 0.10;          // keep remedied colours off pure black/white
+    var LEGIBLE_L_MAX = 0.90;          // so the element hue stays recognisable
+
+    function _parseColor(c) {
+        if (c && typeof c === 'object' && c.length === 3) { return [c[0], c[1], c[2]]; }
+        var s = String(c || '').trim();
+        var m = s.match(/^#([0-9a-f]{3})$/i);
+        if (m) {
+            return [parseInt(m[1][0] + m[1][0], 16), parseInt(m[1][1] + m[1][1], 16), parseInt(m[1][2] + m[1][2], 16)];
+        }
+        m = s.match(/^#([0-9a-f]{6})$/i);
+        if (m) {
+            return [parseInt(m[1].substr(0, 2), 16), parseInt(m[1].substr(2, 2), 16), parseInt(m[1].substr(4, 2), 16)];
+        }
+        m = s.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+        if (m) { return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)]; }
+        return null;
+    }
+
+    function _luminance(rgb) {
+        var v = [0, 0, 0];
+        for (var i = 0; i < 3; i++) {
+            var c = rgb[i] / 255;
+            v[i] = c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        }
+        return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+    }
+
+    function _contrast(a, b) {
+        var A = _parseColor(a), B = _parseColor(b);
+        if (!A || !B) { return Infinity; }
+        var la = _luminance(A), lb = _luminance(B);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+
+    // `top` painted at `alpha` over `under` -> [r,g,b] (unrounded).
+    function _composite(top, alpha, under) {
+        var T = _parseColor(top), U = _parseColor(under);
+        return [0, 1, 2].map(function (i) { return T[i] * alpha + U[i] * (1 - alpha); });
+    }
+
+    function _toHex(rgb) {
+        var s = '#';
+        for (var i = 0; i < 3; i++) {
+            var v = Math.max(0, Math.min(255, Math.round(rgb[i])));
+            s += (v < 16 ? '0' : '') + v.toString(16);
+        }
+        return s;
+    }
+
+    function _rgbToHsl(rgb) {
+        var r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+        var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+        var l = (mx + mn) / 2, d = mx - mn, h = 0, s = 0;
+        if (d > 0) {
+            s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+            if (mx === r) { h = (g - b) / d + (g < b ? 6 : 0); }
+            else if (mx === g) { h = (b - r) / d + 2; }
+            else { h = (r - g) / d + 4; }
+            h /= 6;
+        }
+        return [h, s, l];
+    }
+
+    function _hslToRgb(hsl) {
+        var h = hsl[0], s = hsl[1], l = hsl[2];
+        if (s === 0) { return [l * 255, l * 255, l * 255]; }
+        function hue(p, q, t) {
+            if (t < 0) { t += 1; }
+            if (t > 1) { t -= 1; }
+            if (t < 1 / 6) { return p + (q - p) * 6 * t; }
+            if (t < 1 / 2) { return q; }
+            if (t < 2 / 3) { return p + (q - p) * (2 / 3 - t) * 6; }
+            return p;
+        }
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+        return [hue(p, q, h + 1 / 3) * 255, hue(p, q, h) * 255, hue(p, q, h - 1 / 3) * 255];
+    }
+
+    // Smallest same-hue lightness shift (1-point steps, darker first on a tie)
+    // that lifts `colour` to `min` contrast on `fill`. Returns `colour` itself
+    // when it already passes, or null when no shade in [L_MIN, L_MAX] does
+    // (the caller then draws a patch instead).
+    function _remedyColour(colour, fill, min) {
+        return _remedyColourAll(colour, [fill], min);
+    }
+
+    // As _remedyColour, but the colour must reach `min` on every fill.
+    function _remedyColourAll(colour, fills, min) {
+        var rgb = _parseColor(colour);
+        if (!rgb) { return null; }
+        var fs = [];
+        for (var fi = 0; fi < fills.length; fi++) {
+            var f = _parseColor(fills[fi]);
+            if (!f) { return null; }
+            fs.push(f);
+        }
+        function passes(c) {
+            for (var k = 0; k < fs.length; k++) { if (_contrast(c, fs[k]) < min) { return false; } }
+            return true;
+        }
+        if (passes(rgb)) { return typeof colour === 'string' ? colour : _toHex(rgb); }
+        var hsl = _rgbToHsl(rgb);
+        var l0 = Math.round(hsl[2] * 100);
+        for (var step = 1; step <= 100; step++) {
+            var cands = [l0 - step, l0 + step];
+            for (var ci = 0; ci < 2; ci++) {
+                var l = cands[ci] / 100;
+                if (l < LEGIBLE_L_MIN || l > LEGIBLE_L_MAX) { continue; }
+                var hex = _toHex(_hslToRgb([hsl[0], hsl[1], l]));
+                if (passes(hex)) { return hex; }
+            }
+        }
+        return null;
+    }
+
+    // Positive-area overlap of two {x,y,w,h} boxes (touching edges = 0).
+    function _boxOverlap(a, b) {
+        var w = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+        var h = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+        return (w > 0 && h > 0) ? w * h : 0;
+    }
+
+    // Length of segment {x1,y1,x2,y2} inside box (Liang-Barsky clip).
+    function _segInBox(sg, b) {
+        var dx = sg.x2 - sg.x1, dy = sg.y2 - sg.y1;
+        var p = [-dx, dx, -dy, dy];
+        var q = [sg.x1 - b.x, b.x + b.w - sg.x1, sg.y1 - b.y, b.y + b.h - sg.y1];
+        var t0 = 0, t1 = 1;
+        for (var i = 0; i < 4; i++) {
+            if (p[i] === 0) { if (q[i] < 0) { return 0; } continue; }
+            var r = q[i] / p[i];
+            if (p[i] < 0) { if (r > t1) { return 0; } if (r > t0) { t0 = r; } }
+            else { if (r < t0) { return 0; } if (r < t1) { t1 = r; } }
+        }
+        return Math.max(0, t1 - t0) * Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // ---------------------------------------------------------------------------
     // ImageExport namespace
     // ---------------------------------------------------------------------------
     var ImageExport = {};
+
+    ImageExport._legibility = Object.freeze({
+        parseColor: _parseColor,
+        luminance: function (c) { var p = _parseColor(c); return p ? _luminance(p) : NaN; },
+        contrast: _contrast,
+        composite: _composite,
+        remedyColour: _remedyColour,
+        boxOverlap: _boxOverlap,
+        segInBox: _segInBox,
+        MIN_CONTRAST: LEGIBLE_MIN_CONTRAST
+    });
 
     // ---------------------------------------------------------------------------
     // 1. SVG Export (publication quality)
@@ -311,6 +468,13 @@
             background: '#ffffff'
         }, options);
         opts.componentPairs = options.componentPairs || pairs;
+        // v3.1.0: the mapped-reaction figure always uses the legibility rules
+        // (contrast-aware labels instead of unconditional white knockouts).
+        // Forced after the merge: there is deliberately no way to opt out.
+        opts.legibleLabels = true;
+        if (typeof options.minContrast === 'number' && options.minContrast >= 1) {
+            opts.minContrast = options.minContrast;
+        }
         opts.bondChanges = options.bondChanges || (result && result.bondChanges) || [];
 
         // v2.4.14: per-component compound labels. Caption each reactant/product
@@ -744,6 +908,11 @@
         var showReactionCentre = !!opts.showReactionCenter;
         var showBondChangesOv = !!opts.showBondChanges;
         var showMapNumbers = opts.showMapNumbers !== false;
+        // v3.1.0: legibility rules (set only by toReactionMapSVG; every other
+        // export leaves this false and renders exactly as before).
+        var legible = !!opts.legibleLabels;
+        var minContrast = (typeof opts.minContrast === 'number' && opts.minContrast >= 1)
+            ? opts.minContrast : LEGIBLE_MIN_CONTRAST;
         var bcColors = printMode ? BOND_CHANGE_COLORS_PRINT : BOND_CHANGE_COLORS;
 
         // atomId -> pale halo colour (mapped sub-fragment / trace colouring).
@@ -827,9 +996,18 @@
             return measureText(text, fontSize, fontFamily);
         }
 
+        // v3.1.0: on the legibility path, fall back to the 0.6 x size width
+        // estimate when the environment reports zero (under Node the test/CLI
+        // shim stubs getComputedTextLength to 0). Bonds are then trimmed clear
+        // of the glyph, which the removed knockout rect used to hide (FR-006).
+        function legibleWidth(text, size) {
+            var w = measureText(text, size, fontFamily);
+            return w > 0 ? w : String(text).length * size * 0.6;
+        }
+
         function labelRadius(atom) {
             if (atom.symbol === 'C' && atom.charge === 0 && atom.isotope === 0 && mol.degree(atom.id) > 0) return 0;
-            return estimateTextWidth(atom.symbol) / 2 + labelPad;
+            return (legible ? legibleWidth(atom.symbol, fontSize) : estimateTextWidth(atom.symbol)) / 2 + labelPad;
         }
 
         // Collect ring info for double bond offset and aromatic circles
@@ -905,6 +1083,7 @@
         // Soft per-atom tint for mapped sub-fragments (trace), plus an optional
         // dashed reaction-centre ring. Pushed before the bond/atom layers so
         // they sit behind; CPK label colours are untouched.
+        var haloDiscs = [];     // v3.1.0: painted halos, for the contrast check
         if (colorAtoms || showMappedAtoms || showReactionCentre) {
             var haloR = Math.max(fontSize * 0.9, 9);
             for (var _hi = 0; _hi < mol.atoms.length; _hi++) {
@@ -917,6 +1096,7 @@
                     _fill = COMPONENT_PAIR_NEUTRAL;
                 }
                 if (_fill) {
+                    haloDiscs.push({ cx: _hcx, cy: _hcy, r: haloR, fill: _fill, id: _ha.id });
                     parts.push('<circle cx="' + _r(_hcx) + '" cy="' + _r(_hcy) + '" r="' + _r(haloR) +
                         '" fill="' + _fill + '" stroke="none" opacity="0.85"/>');
                 }
@@ -1046,6 +1226,186 @@
             }
         }
 
+        // v3.1.0: contrast-aware atom text (legibility path only). The fill
+        // beneath a text box is the canvas plus every halo disc it touches,
+        // composited at the halo opacity; the lowest-contrast fill governs
+        // (FR-001). A transparent canvas is judged as white.
+        var legibleCanvas = _parseColor(background === 'transparent' ? '#ffffff' : background) || [255, 255, 255];
+        var legiblePatchFill = _toHex(legibleCanvas);
+
+        function legibleFills(box) {
+            var fills = [], stacked = legibleCanvas, hits = 0, inside = false;
+            for (var di = 0; di < haloDiscs.length; di++) {
+                var d = haloDiscs[di];
+                var nx = Math.max(box.x, Math.min(d.cx, box.x + box.w));
+                var ny = Math.max(box.y, Math.min(d.cy, box.y + box.h));
+                if ((nx - d.cx) * (nx - d.cx) + (ny - d.cy) * (ny - d.cy) >= d.r * d.r) { continue; }
+                var fx = Math.max(Math.abs(box.x - d.cx), Math.abs(box.x + box.w - d.cx));
+                var fy = Math.max(Math.abs(box.y - d.cy), Math.abs(box.y + box.h - d.cy));
+                if (fx * fx + fy * fy <= d.r * d.r) { inside = true; }
+                fills.push(_composite(d.fill, 0.85, legibleCanvas));
+                stacked = _composite(d.fill, 0.85, stacked);
+                hits++;
+            }
+            if (hits > 1) { fills.push(stacked); }
+            if (!inside) { fills.push(legibleCanvas); }
+            return fills;
+        }
+
+        // Push a patch if one is needed and return the colour to draw `text`
+        // with: unchanged when it already passes, else the smallest same-hue
+        // lightness shift, else the original colour over a tight rounded
+        // canvas-coloured patch (FR-003..FR-005). Box as research D6.
+        var legibleTextBoxes = [];     // every atom text drawn so far (obstacles)
+        function legibleColour(colour, x, baseline, size, anchor, text) {
+            var w = legibleWidth(text, size);
+            var left = anchor === 'start' ? x : (anchor === 'end' ? x - w : x - w / 2);
+            var box = { x: left, y: baseline - size * 0.35 - size / 2, w: w, h: size };
+            legibleTextBoxes.push(box);
+            var fixed = _remedyColourAll(colour, legibleFills(box), minContrast);
+            if (fixed) { return fixed; }
+            parts.push('<rect x="' + _r(box.x - 1.5) + '" y="' + _r(box.y - 1) +
+                '" width="' + _r(box.w + 3) + '" height="' + _r(box.h + 2) +
+                '" rx="2" ry="2" fill="' + legiblePatchFill + '" stroke="none"/>');
+            return colour;
+        }
+
+        // v3.1.0: collision-scored map-number placement (FR-007..FR-010,
+        // research D5). Each number takes the least-overlapping of 8 compass
+        // positions around its atom — free side first — tried at growing
+        // offsets, then at 90% and 75% size. Overlapping a label or another
+        // number is hard (x1000 per px^2); crossing a bond costs 10 per px;
+        // sitting on another atom's halo 1 per px^2. A position nearer another
+        // atom than its own is never used. Most crowded atoms choose first;
+        // ties by atom id, so the result is deterministic.
+        var MAP_FONT = 12;
+        var MAP_RINGS = [[1, 1], [0.75, 1], [1.4, 1], [1.8, 1],
+            [1, 0.9], [0.75, 0.9], [1.4, 0.9], [1.8, 0.9],
+            [1, 0.75], [0.75, 0.75], [1.4, 0.75], [1.8, 0.75]];
+        var mapQueue = [];
+
+        function placeMapNumbers(queue) {
+            var d0 = fontSize + 6;
+            var P = {};
+            for (var pi = 0; pi < mol.atoms.length; pi++) {
+                P[mol.atoms[pi].id] = { x: tx(mol.atoms[pi].x), y: ty(mol.atoms[pi].y) };
+            }
+            // Bond strokes as drawn (trimmed at labels), widened for multiplicity.
+            var segs = [];
+            for (var sbi = 0; sbi < mol.bonds.length; sbi++) {
+                var sb = mol.bonds[sbi], s1 = P[sb.atom1], s2 = P[sb.atom2];
+                if (!s1 || !s2) { continue; }
+                var sdx = s2.x - s1.x, sdy = s2.y - s1.y, slen = Math.sqrt(sdx * sdx + sdy * sdy);
+                if (slen < 1) { continue; }
+                var sa1 = mol.getAtom(sb.atom1), sa2 = mol.getAtom(sb.atom2);
+                var st1 = labelRadius(sa1) / slen, st2 = labelRadius(sa2) / slen;
+                var sw = sb.depictStereo || sb.stereo;
+                var half = bondWidth / 2;
+                if (sw === Molecule.STEREO_WEDGE || sw === Molecule.STEREO_DASH) { half = wedgeWidth; }
+                else if (sb.type === Molecule.BOND_DOUBLE || (kekuleSet && kekuleSet[sb.id])) { half += doubleBondGap * 1.5; }
+                else if (sb.type === Molecule.BOND_TRIPLE) { half += tripleBondGap; }
+                segs.push({ x1: s1.x + sdx * st1, y1: s1.y + sdy * st1, x2: s2.x - sdx * st2, y2: s2.y - sdy * st2, half: half });
+            }
+
+            var reach = 2 * d0, R = 1.8 * d0 + 40;
+            var order = queue.map(function (qa) {
+                var p = P[qa.id], n = 0;
+                for (var oi = 0; oi < mol.atoms.length; oi++) {
+                    var o = mol.atoms[oi];
+                    if (o.id === qa.id) { continue; }
+                    var q = P[o.id], ddx = q.x - p.x, ddy = q.y - p.y;
+                    if (ddx * ddx + ddy * ddy < reach * reach) { n++; }
+                }
+                return { atom: qa, n: n };
+            });
+            order.sort(function (a, b) { return (b.n - a.n) || (a.atom.id - b.atom.id); });
+
+            var placedBoxes = [], result = [];
+            for (var qi = 0; qi < order.length; qi++) {
+                var atom = order[qi].atom, p = P[atom.id], text = '' + atom.mapNumber;
+                var near = function (x, y) { return Math.abs(x - p.x) < R && Math.abs(y - p.y) < R; };
+                var locLabels = legibleTextBoxes.filter(function (b) { return near(b.x + b.w / 2, b.y + b.h / 2); });
+                var locMaps = placedBoxes.filter(function (b) { return near(b.x + b.w / 2, b.y + b.h / 2); });
+                var locSegs = segs.filter(function (sg) {
+                    return Math.min(sg.x1, sg.x2) - R < p.x && Math.max(sg.x1, sg.x2) + R > p.x &&
+                        Math.min(sg.y1, sg.y2) - R < p.y && Math.max(sg.y1, sg.y2) + R > p.y;
+                });
+                var locHalos = haloDiscs.filter(function (d) { return d.id !== atom.id && near(d.cx, d.cy); });
+                var locAtoms = mol.atoms.filter(function (o) { return o.id !== atom.id && near(P[o.id].x, P[o.id].y); });
+
+                // Free side: away from the sum of bond directions (down if none).
+                var vx = 0, vy = 0, nbs = mol.getNeighbors(atom.id);
+                for (var ni = 0; ni < nbs.length; ni++) {
+                    var nq = P[nbs[ni]], ux = nq.x - p.x, uy = nq.y - p.y, ul = Math.sqrt(ux * ux + uy * uy);
+                    if (ul > 0) { vx -= ux / ul; vy -= uy / ul; }
+                }
+                var va = (vx * vx + vy * vy > 1e-6) ? Math.atan2(vy, vx) * 180 / Math.PI : 90;
+                var dirs = [];
+                for (var k = 0; k < 16; k++) {
+                    dirs.push({ a: k * 22.5, diff: ((k * 22.5 - va + 540) % 360) - 180 });
+                }
+                dirs.sort(function (a, b) {
+                    var da = Math.abs(a.diff), db = Math.abs(b.diff);
+                    if (Math.abs(da - db) > 1e-9) { return da - db; }
+                    return b.diff - a.diff;            // tie: clockwise first
+                });
+
+                var best = null, fallback = null;
+                for (var ri = 0; ri < MAP_RINGS.length; ri++) {
+                    var size = MAP_FONT * MAP_RINGS[ri][1], dist = d0 * MAP_RINGS[ri][0];
+                    var w = legibleWidth(text, size), ringBest = null;
+                    for (var di = 0; di < dirs.length; di++) {
+                        var rad = dirs[di].a * Math.PI / 180;
+                        var cx = p.x + Math.cos(rad) * dist, cy = p.y + Math.sin(rad) * dist;
+                        var margin = Infinity;
+                        for (var ai = 0; ai < locAtoms.length; ai++) {
+                            var op = P[locAtoms[ai].id], ox = cx - op.x, oy = cy - op.y;
+                            margin = Math.min(margin, Math.sqrt(ox * ox + oy * oy) - dist);
+                        }
+                        var box = { x: cx - w / 2, y: cy - size / 2, w: w, h: size };
+                        if (margin < 0.01) {
+                            // Nearer another atom: never chosen normally; kept only
+                            // as the forced fallback with the widest margin.
+                            var fhard = 0;
+                            for (var fi2 = 0; fi2 < locLabels.length; fi2++) { fhard += _boxOverlap(box, locLabels[fi2]); }
+                            for (fi2 = 0; fi2 < locMaps.length; fi2++) { fhard += _boxOverlap(box, locMaps[fi2]); }
+                            if (!fallback || fhard < fallback.fhard - 1e-9 ||
+                                (Math.abs(fhard - fallback.fhard) <= 1e-9 && margin > fallback.margin)) {
+                                fallback = { fhard: fhard, margin: margin, box: box, size: size, cx: cx, cy: cy, hard: 1 };
+                            }
+                            continue;
+                        }
+                        var hard = 0, soft = 0, oi2;
+                        for (oi2 = 0; oi2 < locLabels.length; oi2++) { hard += _boxOverlap(box, locLabels[oi2]); }
+                        for (oi2 = 0; oi2 < locMaps.length; oi2++) { hard += _boxOverlap(box, locMaps[oi2]); }
+                        for (oi2 = 0; oi2 < locSegs.length; oi2++) {
+                            var hw = locSegs[oi2].half;
+                            soft += 10 * _segInBox(locSegs[oi2], { x: box.x - hw, y: box.y - hw, w: box.w + 2 * hw, h: box.h + 2 * hw });
+                        }
+                        for (oi2 = 0; oi2 < locHalos.length; oi2++) {
+                            var hd = locHalos[oi2];
+                            soft += 0.785 * _boxOverlap(box, { x: hd.cx - hd.r, y: hd.cy - hd.r, w: 2 * hd.r, h: 2 * hd.r });
+                        }
+                        var score = hard * 1000 + soft;
+                        if (!ringBest || score < ringBest.score) {
+                            ringBest = { score: score, hard: hard, box: box, size: size, cx: cx, cy: cy };
+                        }
+                    }
+                    if (!ringBest) { continue; }
+                    if (!best || ringBest.score < best.score) { best = ringBest; }
+                    if (ringBest.hard === 0) { best = ringBest; break; }
+                }
+                if (!best) { best = fallback; }         // crowded layout: least-bad spot (forced)
+                placedBoxes.push(best.box);
+                result.push({ atom: atom, cx: best.cx, cy: best.cy, size: best.size, forced: best.hard > 0 });
+            }
+            // Emit in molecule order so the SVG text order is stable.
+            var idx = {};
+            for (var ii = 0; ii < mol.atoms.length; ii++) { idx[mol.atoms[ii].id] = ii; }
+            result.sort(function (a, b) { return idx[a.atom.id] - idx[b.atom.id]; });
+            return result;
+        }
+
         // --- Atoms ---
         for (var ai2 = 0; ai2 < mol.atoms.length; ai2++) {
             var atom = mol.atoms[ai2];
@@ -1057,16 +1417,22 @@
                 atom.isotope > 0 || mol.degree(atom.id) === 0;
 
             if (showLabel) {
-                var tw = estimateTextWidth(atom.symbol);
+                var tw = legible ? legibleWidth(atom.symbol, fontSize) : estimateTextWidth(atom.symbol);
 
-                // White background behind label
-                parts.push('<rect x="' + _r(ax - tw / 2 - labelPad) + '" y="' + _r(ay - fontSize / 2 - 2) +
-                    '" width="' + _r(tw + labelPad * 2) + '" height="' + _r(fontSize + 4) +
-                    '" fill="' + haloFill + '" stroke="none"/>');
+                // White background behind label (v3.1.0: not on the legibility
+                // path — there the contrast check decides, see legibleColour)
+                if (!legible) {
+                    parts.push('<rect x="' + _r(ax - tw / 2 - labelPad) + '" y="' + _r(ay - fontSize / 2 - 2) +
+                        '" width="' + _r(tw + labelPad * 2) + '" height="' + _r(fontSize + 4) +
+                        '" fill="' + haloFill + '" stroke="none"/>');
+                }
 
                 // Atom label
+                var symColor = legible
+                    ? legibleColour(elemColor, ax, ay + fontSize * 0.35, fontSize, 'middle', atom.symbol)
+                    : elemColor;
                 parts.push('<text x="' + _r(ax) + '" y="' + _r(ay + fontSize * 0.35) +
-                    '" fill="' + elemColor + '" font-size="' + fontSize + 'px" font-family="' + fontFamilyAttr +
+                    '" fill="' + symColor + '" font-size="' + fontSize + 'px" font-family="' + fontFamilyAttr +
                     '" font-weight="bold" text-anchor="middle">' + _esc(atom.symbol) + '</text>');
 
                 // Charge
@@ -1074,8 +1440,11 @@
                     var chargeStr = atom.charge > 0
                         ? (atom.charge === 1 ? '+' : atom.charge + '+')
                         : (atom.charge === -1 ? '\u2212' : Math.abs(atom.charge) + '\u2212');
+                    var chgColor = legible
+                        ? legibleColour(elemColor, ax + tw / 2 + 2, ay - fontSize * 0.2, 9, 'start', chargeStr)
+                        : elemColor;
                     parts.push('<text x="' + _r(ax + tw / 2 + 2) + '" y="' + _r(ay - fontSize * 0.2) +
-                        '" fill="' + elemColor + '" font-size="9px" font-family="' + fontFamilyAttr +
+                        '" fill="' + chgColor + '" font-size="9px" font-family="' + fontFamilyAttr +
                         '" text-anchor="start">' + _esc(chargeStr) + '</text>');
                 }
 
@@ -1087,7 +1456,9 @@
                         var hCountStr = hCount > 1 ? '' + hCount : '';
                         var hDir = hydrogenDirection(atom);
                         var hFontSize = fontSize * 0.77;
-                        var hTextW = estimateTextWidth(hStr) + (hCountStr ? estimateTextWidth(hCountStr) * 0.6 : 0);
+                        var hTextW = legible
+                            ? legibleWidth(hStr, fontSize) + (hCountStr ? legibleWidth(hCountStr, fontSize) * 0.6 : 0)
+                            : estimateTextWidth(hStr) + (hCountStr ? estimateTextWidth(hCountStr) * 0.6 : 0);
                         var hx, hy, hAnchor;
                         if (hDir === 'left') {
                             hx = ax - tw / 2 - (atom.charge !== 0 ? 10 : 2) - hTextW / 2;
@@ -1104,7 +1475,7 @@
                         }
 
                         // Background behind H label
-                        if (hDir === 'left' || hDir === 'right') {
+                        if (!legible && (hDir === 'left' || hDir === 'right')) {
                             var hBgX = hDir === 'right'
                                 ? ax + tw / 2 + (atom.charge !== 0 ? 10 : 2)
                                 : ax - tw / 2 - (atom.charge !== 0 ? 10 : 2) - hTextW;
@@ -1119,16 +1490,22 @@
                             hLabel = 'H<tspan font-size="' + Math.round(hFontSize * 0.75) +
                                 'px" dy="3">' + hCountStr + '</tspan>';
                         }
+                        var hColor = legible
+                            ? legibleColour('#666666', hx, hy, _r(hFontSize), hAnchor, hStr + hCountStr)
+                            : '#666666';
                         parts.push('<text x="' + _r(hx) + '" y="' + _r(hy) +
-                            '" fill="#666666" font-size="' + _r(hFontSize) + 'px" font-family="' + fontFamilyAttr +
+                            '" fill="' + hColor + '" font-size="' + _r(hFontSize) + 'px" font-family="' + fontFamilyAttr +
                             '" text-anchor="' + hAnchor + '">' + hLabel + '</text>');
                     }
                 }
 
                 // Isotope
                 if (atom.isotope > 0) {
+                    var isoColor = legible
+                        ? legibleColour(elemColor, ax - tw / 2 - 4, ay - fontSize * 0.2, 9, 'end', '' + atom.isotope)
+                        : elemColor;
                     parts.push('<text x="' + _r(ax - tw / 2 - 4) + '" y="' + _r(ay - fontSize * 0.2) +
-                        '" fill="' + elemColor + '" font-size="9px" font-family="' + fontFamilyAttr +
+                        '" fill="' + isoColor + '" font-size="9px" font-family="' + fontFamilyAttr +
                         '" text-anchor="end">' + atom.isotope + '</text>');
                 }
             }
@@ -1140,12 +1517,30 @@
                     '" text-anchor="middle">' + (ai2 + 1) + '</text>');
             }
 
-            // Atom-atom mapping numbers
+            // Atom-atom mapping numbers (v3.1.0: on the legibility path they
+            // are placed after every label is known — see placeMapNumbers)
             if (showMapNumbers && atom.mapNumber > 0) {
-                var mapY = ay + fontSize + 6;
-                parts.push('<text x="' + _r(ax) + '" y="' + _r(mapY + 12 * 0.3) +
-                    '" fill="#0d9488" font-size="12px" font-family="' + fontFamilyAttr +
-                    '" font-weight="bold" text-anchor="middle">' + atom.mapNumber + '</text>');
+                if (legible) {
+                    mapQueue.push(atom);
+                } else {
+                    var mapY = ay + fontSize + 6;
+                    parts.push('<text x="' + _r(ax) + '" y="' + _r(mapY + 12 * 0.3) +
+                        '" fill="#0d9488" font-size="12px" font-family="' + fontFamilyAttr +
+                        '" font-weight="bold" text-anchor="middle">' + atom.mapNumber + '</text>');
+                }
+            }
+        }
+
+        if (legible && mapQueue.length) {
+            var placedMaps = placeMapNumbers(mapQueue);
+            for (var pmi = 0; pmi < placedMaps.length; pmi++) {
+                var pm = placedMaps[pmi];
+                var pmText = '' + pm.atom.mapNumber;
+                var pmBaseline = pm.cy + pm.size * 0.35;
+                var pmColor = legibleColour('#0d9488', pm.cx, pmBaseline, pm.size, 'middle', pmText);
+                parts.push('<text x="' + _r(pm.cx) + '" y="' + _r(pmBaseline) +
+                    '" fill="' + pmColor + '" font-size="' + _r(pm.size) + 'px" font-family="' + fontFamilyAttr +
+                    '" font-weight="bold" text-anchor="middle">' + pmText + '</text>');
             }
         }
 

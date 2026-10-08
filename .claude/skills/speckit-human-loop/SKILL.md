@@ -1,0 +1,1 @@
+../../../.specify/extensions/human-loop/.specify-dev/agent-commands/claude/speckit-human-loop-human-loop/SKILL.md
