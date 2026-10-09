@@ -1,0 +1,2115 @@
+=== BIME v3.0.3 Regression Test Suite ===
+
+SMILES Parser
+  ✓ parses single C as one atom, no bonds
+  ✓ parses single N as one atom
+  ✓ parses single O as one atom
+  ✓ parses C=C as 2 atoms, double bond
+  ✓ parses C#C as 2 atoms, triple bond
+  ✓ parses benzene c1ccccc1 as 6 aromatic atoms, 6 bonds
+  ✓ parses cyclohexane C1CCCCC1 as 6 atoms, 6 bonds
+  ✓ parses cyclobutane C1CCC1 as 4 atoms, 4 bonds
+  ✓ parses pyridine c1ccncc1 as 5C + 1N, all aromatic
+  ✓ parses pyrrole c1cc[nH]c1 — 5 atoms, [nH] H=1
+  ✓ parses furan c1ccoc1 — aromatic O
+  ✓ parses thiophene c1ccsc1 — aromatic S
+  ✓ parses naphthalene as 10 aromatic atoms, 11 bonds
+  ✓ parses indole as 9 atoms
+  ✓ parses caffeine — 14 atoms, 15 bonds
+  ✓ parses [NH4+] — charge=+1, hydrogens=4
+  ✓ parses [O-] — charge=-1
+  ✓ parses [Na+].[Cl-] — 2 atoms, 0 bonds, dot fragment
+  ✓ parses [2H] as deuterium with isotope=2
+  ✓ parses [13C] with isotope=13
+  ✓ parses [C@@H](F)(Cl)Br — chirality stored on C (adjacency frame), H=1
+  ✓ parses /C=C/ — 2 atoms, 1 double bond
+  ✓ parses CCO>>CC=O — reactant + product + arrow
+  ✓ parses [CH3:1][OH:2]>>[CH2:1]=[O:2] — atom maps preserved
+  ✓ parses empty string — 0 atoms, no errors
+  ✓ parses 50-atom chain (CCC...C) — 50 atoms, 49 bonds
+  ✓ parses unclosed ring C1CCC — captures error
+  ✓ parses [unclosed — captures bracket error
+  ✓ atom map :7 preserved on bracket atom
+  → SMILES Parser: 29 passed, 0 failed
+
+SMILES Writer (round-trip)
+  ✓ round-trip atom/bond counts: C
+  ✓ round-trip atom/bond counts: CC
+  ✓ round-trip atom/bond counts: CCC
+  ✓ round-trip atom/bond counts: CCO
+  ✓ round-trip atom/bond counts: C=C
+  ✓ round-trip atom/bond counts: C#C
+  ✓ round-trip atom/bond counts: CC(=O)O
+  ✓ round-trip atom/bond counts: c1ccccc1
+  ✓ round-trip atom/bond counts: C1CCCCC1
+  ✓ round-trip atom/bond counts: C1CCC1
+  ✓ round-trip atom/bond counts: c1ccncc1
+  ✓ round-trip atom/bond counts: c1ccoc1
+  ✓ round-trip atom/bond counts: c1ccsc1
+  ✓ round-trip atom/bond counts: c1ccc2ccccc2c1
+  ✓ round-trip atom/bond counts: c1ccc2[nH]ccc2c1
+  ✓ round-trip atom/bond counts: Cn1c(=O)c2c(ncn2C)n(C)c1=O
+  ✓ round-trip atom/bond counts: CC(=O)Oc1ccccc1OC(C)=O
+  ✓ round-trip atom/bond counts: C(C)(C)(C)C
+  ✓ benzene stays lowercase aromatic (c1ccccc1 not C1=CC=CC=C1)
+  ✓ charge preserved: [NH4+]
+  ✓ charge preserved: [O-]
+  ✓ isotope preserved: [13C]
+  ✓ isotope preserved: [2H]
+  ✓ chirality @@ preserved through round-trip
+  ✓ chirality @ preserved through round-trip
+  ✓ atom map preserved through round-trip
+  ✓ [Na+].[Cl-] — round-trip preserves both fragments and dot
+  ✓ CCO>>CC=O — reaction arrow preserved
+  ✓ empty Molecule writes empty string
+  → SMILES Writer: 29 passed, 0 failed
+
+SMARTS Match
+  ✓ [#6] on benzene → 6 matches
+  ✓ wildcard [*] on benzene → 6 matches
+  ✓ [OH] on phenol → 1 match (the hydroxyl O)
+  ✓ [NX3;H2] on ethylamine CCN → 1 match
+  ✓ benzene SMARTS c1ccccc1 on benzene → 12 matches (6 rotations × 2 reflections)
+  ✓ [a] on benzene → 6 matches (every C is aromatic)
+  ✓ [A] on benzene → 0 matches (no aliphatic atom)
+  ✓ [c] on KEKULÉ benzene C1=CC=CC=C1 → 6 matches (BUG-H1 regression)
+  ✓ [a] on KEKULÉ benzene C1=CC=CC=C1 → 6 matches (BUG-H1 regression)
+  ✓ [c] on KEKULÉ pyridine C1=CC=NC=C1 → 5 matches (BUG-H1 regression)
+  ✓ [A] on KEKULÉ benzene C1=CC=CC=C1 → 0 matches (BUG-H1: now correctly aromatic)
+  ✓ [R] on cyclohexane → 6 matches
+  ✓ [R] on ethane CC → 0 matches (no ring atoms)
+  ✓ [$(*~[#7])] on pyridine → 1 match (BIME recursive SMARTS policy)
+  ✓ [+1] on [NH4+] → 1 match
+  ✓ [r6] on naphthalene → 10 matches
+  ✓ [D2] on benzene → 6 matches (every C has degree 2)
+  ✓ hasMatch returns true for [#6] on benzene
+  ✓ hasMatch returns false for N in benzene
+  ✓ [*:] (empty map number) produces a parse error — regression for v1.1.3 fix
+  → SMARTS Match: 20 passed, 0 failed
+
+Substructure matching
+  ✓ benzene contains benzene → 12 mappings (6 rotations × 2 reflections)
+  ✓ CC is a substructure of CCC
+  ✓ findAllSubstructures CC in CCC returns 4 mappings (2 positions × 2 orientations)
+  ✓ empty-query findSubstructure returns the empty mapping {}
+  ✓ empty-query isSubstructure returns true
+  ✓ O.O in O.O → 2 mappings (each O can pair with either O)
+  ✓ single C in benzene → 6 placements (one per ring carbon)
+  ✓ N (alone) not a substructure of benzene (only C atoms)
+  ✓ benzene not a substructure of cyclohexane (aromaticity differs)
+  ✓ larger query (CCC) cannot match smaller target (CC) → null
+  → Substructure matching: 10 passed, 0 failed
+
+SMSD MCS
+  ✓ mcs(c1ccccc1, c1ccccc1) = full benzene (6 atoms)
+  ✓ mcs(CCO, CCO) = 3 atoms (full mol)
+  ✓ mcs(C, N) = 0 atoms (different elements)
+  ✓ mcs(c1ccccc1, c1ccccc1Cl) = 6 atoms (the benzene ring)
+  ✓ MCS is symmetric: |mcs(A,B)| = |mcs(B,A)| for CCO and CCN
+  ✓ MCS is symmetric: |mcs(benzene,toluene)| = |mcs(toluene,benzene)|
+  ✓ MCS is deterministic: 3 runs of mcs(aspirin, salicylic acid) all equal
+  ✓ mcs_size on identical graphs returns full atom count
+  → SMSD MCS: 8 passed, 0 failed
+
+Aromaticity
+  ✓ benzene → 6 aromatic atoms
+  ✓ pyridine → 6 aromatic atoms
+  ✓ pyrrole → 5 aromatic atoms (NH lone-pair donates)
+  ✓ furan → 5 aromatic atoms
+  ✓ thiophene → 5 aromatic atoms
+  ✓ tetrazole c1nnn[nH]1 → all 5 aromatic
+  ✓ imidazole c1nc[nH]c1 → all 5 aromatic
+  ✓ cyclopentadiene C1=CCC=C1 → NOT aromatic (0 aromatic atoms)
+  ✓ cyclooctatetraene C1=CC=CC=CC=C1 → NOT aromatic (8 atoms, 0 aromatic)
+  ✓ naphthalene → 10 atoms, all aromatic
+  ✓ indole → 9 atoms, all aromatic
+  ✓ cyclohexane C1CCCCC1 → NOT aromatic (0 aromatic)
+  ✓ Kekule 2-pyridone (O=C1C=CC=CN1) → 0 aromatic atoms (BIME policy)
+  → Aromaticity: 13 passed, 0 failed
+
+H Count
+  ✓ C → 4 H
+  ✓ O → 2 H
+  ✓ N → 3 H
+  ✓ [NH4+] → 4 H (explicit, calcHydrogens returns explicit)
+  ✓ [O-] → 0 H (BIME stores hydrogens=0 for bracket atoms without H token)
+  ✓ aromatic c (in benzene) → 1 H
+  ✓ [nH] → 1 H (explicit)
+  ✓ pyridine n → 0 H (lone-pair donor, no NH)
+  ✓ S(=O)(=O)C → S has 1 H (hypervalent sulfur, valence-table fallback)
+  ✓ round-trip methane: parse(write(parse("C"))) gives calcH=4
+  → H Count: 10 passed, 0 failed
+
+Full Round-Trip (Parse → Write → Parse)
+  ✓ Aspirin: atom/bond counts survive parse → write → parse
+  ✓ Aspirin: second round-trip is canon-stable (write idempotent)
+  ✓ Caffeine: atom/bond counts survive parse → write → parse
+  ✓ Benzene: atom/bond counts survive parse → write → parse
+  ✓ Benzene: second round-trip is canon-stable (write idempotent)
+  ✓ Naphthalene: atom/bond counts survive parse → write → parse
+  ✓ Naphthalene: second round-trip is canon-stable (write idempotent)
+  ✓ Acetic acid: atom/bond counts survive parse → write → parse
+  ✓ Acetic acid: second round-trip is canon-stable (write idempotent)
+  ✓ Ethanol: atom/bond counts survive parse → write → parse
+  ✓ Ethanol: second round-trip is canon-stable (write idempotent)
+  ✓ Glucose: atom/bond counts survive parse → write → parse
+  ✓ Glucose: second round-trip is canon-stable (write idempotent)
+  ✓ Morphine: atom/bond counts survive parse → write → parse
+  ✓ Morphine: second round-trip is canon-stable (write idempotent)
+  ✓ DHEA: atom/bond counts survive parse → write → parse
+  ✓ DHEA: second round-trip is canon-stable (write idempotent)
+  ✓ Pyridine: atom/bond counts survive parse → write → parse
+  ✓ Pyridine: second round-trip is canon-stable (write idempotent)
+  ✓ ring-opener canon-stable: cyclohexanol — ring-opening stereocentre
+  ✓ ring-opener canon-stable: 2-methylcyclohexan-1-ol — ring-opening centre
+  ✓ ring-opener canon-stable: F/Cl-disubstituted cyclopentane — opener + 2nd
+  ✓ orbit stereo-aware tie-break canon-stable: cyclohexane-1,2-diol — one centre marked
+  ✓ orbit stereo-aware tie-break canon-stable: 1,2-difluorocyclohexane — two equivalent centres
+  ✓ orbit-stereo known limitation: cyclohexane-1,2-diol — two equivalent stereocentres — molecule survives round-trip
+  → Round-Trip: 25 passed, 0 failed
+
+History (undo/redo)
+  ✓ push 100 entries, undo back to start, redo all the way forward
+  ✓ push 200 entries — oldest 100 evicted, length capped at 100
+  ✓ push, then changed-without-push (push again) clears redo stack
+  ✓ reaction undo includes reactionPlusSigns (v1.0.2 fix)
+  ✓ clear() empties both undo and redo stacks
+  ✓ Atom.clone() preserves mapHighlighted and data — regression for v1.1.3 fix
+  ✓ Atom.clone() with mapHighlighted=false preserves false (not undefined)
+  ✓ Bond.clone() preserves data — regression for v1.1.3 fix
+  ✓ Two snapshots of unchanged molecule are byte-equal — regression for v1.1.3 MoveTool fix
+  ✓ MoveTool drags selected molecule without moving other components
+  ✓ PanTool translates selection when present and all atoms otherwise
+  ✓ SelectTool single-click selects an atom without requiring a drag rectangle
+  ✓ SelectTool single-click can select a bond hit target
+  ✓ SelectTool drags the current selected fragment
+  ✓ SelectTool can drag an unselected atom without switching tools
+  ✓ Molecule.clear removes molecule-level metadata
+  → History: 16 passed, 0 failed
+
+Chem Torture
+  ✓ anthracene: polycyclic aromatic atom/bond/aromatic counts
+  ✓ phenanthrene: polycyclic aromatic atom/bond/aromatic counts
+  ✓ pyrene: polycyclic aromatic atom/bond/aromatic counts
+  ✓ azulene: polycyclic aromatic atom/bond/aromatic counts
+  ✓ phenanthroline: polycyclic aromatic atom/bond/aromatic counts
+  ✓ pyridazine: heteroaromatic atom/aromatic counts
+  ✓ pyrimidine: heteroaromatic atom/aromatic counts
+  ✓ pyrazine: heteroaromatic atom/aromatic counts
+  ✓ pyrazole: heteroaromatic atom/aromatic counts
+  ✓ imidazole: heteroaromatic atom/aromatic counts
+  ✓ oxazole: heteroaromatic atom/aromatic counts
+  ✓ thiazole: heteroaromatic atom/aromatic counts
+  ✓ quinoline: heteroaromatic atom/aromatic counts
+  ✓ isoquinoline: heteroaromatic atom/aromatic counts
+  ✓ benzofuran: heteroaromatic atom/aromatic counts
+  ✓ benzothiophene: heteroaromatic atom/aromatic counts
+  ✓ purine: heteroaromatic atom/aromatic counts
+  ✓ carbazole: heteroaromatic atom/aromatic counts
+  ✓ glycine_zwitterion: atom count and net formal charge preserved
+  ✓ betaine: atom count and net formal charge preserved
+  ✓ alanine_zwitter: atom count and net formal charge preserved
+  ✓ azide: atom count and net formal charge preserved
+  ✓ nitrate: atom count and net formal charge preserved
+  ✓ phosphate_3minus: atom count and net formal charge preserved
+  ✓ sulfate: atom count and net formal charge preserved
+  ✓ guanidinium: atom count and net formal charge preserved
+  ✓ quaternary_amm: atom count and net formal charge preserved
+  ✓ pyridinium_Nmethyl: atom count and net formal charge preserved
+  ✓ phenolate: atom count and net formal charge preserved
+  ✓ sodium_benzoate: atom count and net formal charge preserved
+  ✓ ammonium_acetate: atom count and net formal charge preserved
+  ✓ norbornane: bridged/spiro/cage atom and bond counts
+  ✓ bicyclo_221: bridged/spiro/cage atom and bond counts
+  ✓ spiro_5_5: bridged/spiro/cage atom and bond counts
+  ✓ spiro_3_3: bridged/spiro/cage atom and bond counts
+  ✓ adamantane: bridged/spiro/cage atom and bond counts
+  ✓ cubane_skel: bridged/spiro/cage atom and bond counts
+  ✓ macrolactone (12-membered ring): 15 atoms, 15 bonds
+  ✓ cyclam (1,4,8,11-tetraazacyclotetradecane): 12 atoms, 12 bonds
+  ✓ glucopyranose (sugar ring): 12 atoms, 12 bonds, no aromatic
+  ✓ disaccharide (glycoside dimer): 23 atoms, 24 bonds
+  ✓ inositol (cyclohexane hexaol, 6 stereocentres): 12 atoms, 12 bonds
+  ✓ ATP-like nucleotide fragment: 27 atoms, 9 aromatic, net charge 0
+  ✓ uracil (pyrimidone): atom count + 6 aromatic ring atoms
+  ✓ thymine (pyrimidone): atom count + 6 aromatic ring atoms
+  ✓ cytosine (pyrimidone): atom count + 6 aromatic ring atoms
+  ✓ amide motif [NX3][CX3](=O) on tripeptide → 2 matches
+  ✓ sulfonamide motif [NX3]S(=O)(=O) on sulfanilamide → 2 matches
+  ✓ thiol [SX2H1] on cysteine fragment → 1 match
+  ✓ carboxylate [CX3](=O)[O-] on glycine zwitterion → 1 match
+  ✓ quaternary ammonium [N+] on choline → 1 match
+  ✓ aromatic [nH] on tetrazole → 1 match
+  ✓ aromatic [n+] on N-methylpyridinium → 1 match
+  ✓ peptide dipeptide substructure of tripeptide
+  ✓ phosphate substructure of diphosphate (chain extension)
+  ✓ benzene substructure of disconnected (benzene . acetic acid)
+  ✓ MCS(glucose, glucoside dimer) covers monomer (12 atoms)
+  ✓ MCS(benzene, naphthalene) covers benzene ring (6 atoms)
+  ✓ MCS(cyclohexane, decalin) covers cyclohexane ring (6 atoms)
+  → Chem Torture: 59 passed, 0 failed
+
+AAM Round-Trip
+  ✓ esterification (acetic acid + methanol): parses with arrow and full map multiset
+  ✓ esterification (acetic acid + methanol): round-trips through writer (arrow + maps preserved)
+  ✓ acetylene hydration (Markovnikov): parses with arrow and full map multiset
+  ✓ acetylene hydration (Markovnikov): round-trips through writer (arrow + maps preserved)
+  ✓ amide formation (methylamine + acetic acid): parses with arrow and full map multiset
+  ✓ amide formation (methylamine + acetic acid): round-trips through writer (arrow + maps preserved)
+  ✓ Claisen condensation (two methyl acetate): parses with arrow and full map multiset
+  ✓ Claisen condensation (two methyl acetate): round-trips through writer (arrow + maps preserved)
+  ✓ SN2 (methyl bromide + hydroxide): parses with arrow and full map multiset
+  ✓ SN2 (methyl bromide + hydroxide): round-trips through writer (arrow + maps preserved)
+  ✓ Diels–Alder (butadiene + ethylene): parses with arrow and full map multiset
+  ✓ Diels–Alder (butadiene + ethylene): round-trips through writer (arrow + maps preserved)
+  ✓ partial AAM (only some atoms mapped): parses with arrow and full map multiset
+  ✓ partial AAM (only some atoms mapped): round-trips through writer (arrow + maps preserved)
+  ✓ unmapped reaction (oxidation: ethanol -> acetaldehyde): parses with arrow and full map multiset
+  ✓ unmapped reaction (oxidation: ethanol -> acetaldehyde): round-trips through writer (arrow + maps preserved)
+  ✓ aromatic AAM (benzene chlorination): parses with arrow and full map multiset
+  ✓ aromatic AAM (benzene chlorination): round-trips through writer (arrow + maps preserved)
+  ✓ salt fragment with AAM (sodium hydroxide + methyl chloride): parses with arrow and full map multiset
+  ✓ salt fragment with AAM (sodium hydroxide + methyl chloride): round-trips through writer (arrow + maps preserved)
+  ✓ RXN writer exports reaction components with atom maps
+  ✓ atom map :0 is treated as no map (bracket atom without :n)
+  ✓ large atom map number :999 parses and round-trips
+  ✓ reaction with two reactants and one product preserves atom count
+  → AAM Round-Trip: 24 passed, 0 failed
+
+Charge/Isotope Round-Trip
+  ✓ fluoride: parses with expected count + charge + isotopes
+  ✓ fluoride: round-trip preserves count + charge + isotopes
+  ✓ hydronium: parses with expected count + charge + isotopes
+  ✓ hydronium: round-trip preserves count + charge + isotopes
+  ✓ cyanide: parses with expected count + charge + isotopes
+  ✓ cyanide: round-trip preserves count + charge + isotopes
+  ✓ nitronium: parses with expected count + charge + isotopes
+  ✓ nitronium: round-trip preserves count + charge + isotopes
+  ✓ fe3_cation: parses with expected count + charge + isotopes
+  ✓ fe3_cation: round-trip preserves count + charge + isotopes
+  ✓ cu2_cation: parses with expected count + charge + isotopes
+  ✓ cu2_cation: round-trip preserves count + charge + isotopes
+  ✓ zn2_cation: parses with expected count + charge + isotopes
+  ✓ zn2_cation: round-trip preserves count + charge + isotopes
+  ✓ oxide_dianion: parses with expected count + charge + isotopes
+  ✓ oxide_dianion: round-trip preserves count + charge + isotopes
+  ✓ sulfide_dianion: parses with expected count + charge + isotopes
+  ✓ sulfide_dianion: round-trip preserves count + charge + isotopes
+  ✓ perchlorate: parses with expected count + charge + isotopes
+  ✓ perchlorate: round-trip preserves count + charge + isotopes
+  ✓ imidazolium: parses with expected count + charge + isotopes
+  ✓ imidazolium: round-trip preserves count + charge + isotopes
+  ✓ saccharinate: parses with expected count + charge + isotopes
+  ✓ saccharinate: round-trip preserves count + charge + isotopes
+  ✓ phenolate: parses with expected count + charge + isotopes
+  ✓ phenolate: round-trip preserves count + charge + isotopes
+  ✓ tropylium: parses with expected count + charge + isotopes
+  ✓ tropylium: round-trip preserves count + charge + isotopes
+  ✓ trimethylamine_Noxide: parses with expected count + charge + isotopes
+  ✓ trimethylamine_Noxide: round-trip preserves count + charge + isotopes
+  ✓ azide: parses with expected count + charge + isotopes
+  ✓ azide: round-trip preserves count + charge + isotopes
+  ✓ deuterated_methane: parses with expected count + charge + isotopes
+  ✓ deuterated_methane: round-trip preserves count + charge + isotopes
+  ✓ C13_methane: parses with expected count + charge + isotopes
+  ✓ C13_methane: round-trip preserves count + charge + isotopes
+  ✓ C13_with_D: parses with expected count + charge + isotopes
+  ✓ C13_with_D: round-trip preserves count + charge + isotopes
+  ✓ O18_water: parses with expected count + charge + isotopes
+  ✓ O18_water: round-trip preserves count + charge + isotopes
+  ✓ magnesium_chloride: parses with expected count + charge + isotopes
+  ✓ magnesium_chloride: round-trip preserves count + charge + isotopes
+  ✓ copper_acetate: parses with expected count + charge + isotopes
+  ✓ copper_acetate: round-trip preserves count + charge + isotopes
+  ✓ sodium_phenolate: parses with expected count + charge + isotopes
+  ✓ sodium_phenolate: round-trip preserves count + charge + isotopes
+  ✓ MgCl2 written form preserves three fragments separated by .
+  ✓ copper acetate (3 fragments) preserves three fragments through writer
+  ✓ perchlorate per-atom charges: Cl(+3) and 4×O(-1) preserved
+  ✓ isotope value 13 preserved exactly through round-trip
+  ✓ isotope value 18 preserved exactly through round-trip
+  → Charge/Isotope Round-Trip: 51 passed, 0 failed
+
+RDT (AAM)
+  ✓ RDT module loads and exposes the public API
+  ✓ splitReactionSides places reactants left of arrow midpoint
+  ✓ splitReactionSides handles 2+1 component reaction
+  ✓ checkBalance reports CCO>>CC=O as balanced (heavy-atom-only policy)
+  ✓ checkBalance flags clearly unbalanced reaction
+  ✓ MIN strategy on CCO>>CC=O maps all 3 heavy atoms
+  ✓ MAX strategy on CCO>>CC=O maps all 3 heavy atoms
+  ✓ MIXTURE strategy on CCO>>CC=O maps all 3 heavy atoms
+  ✓ RING strategy returns no MCS pairs on a non-ring reaction
+  ✓ CCO>>CC=O: orderChange on the C-O bond (single->double)
+  ✓ SN2: CCBr.[OH-]>>CCO.[Br-] maps the ethyl backbone + the incoming O and leaving Br
+  ✓ Esterification CC(=O)O.OCC>>CC(=O)OCC.O has at least one formed bond
+  ✓ Ar chlorination c1ccccc1.ClCl>>c1ccc(Cl)cc1.[ClH] preserves benzene ring
+  ✓ Reduction CC=O.[H][H]>>CCO maps the 3-atom C-C-O backbone
+  ✓ Diels-Alder C=CC=C.C=C>>C1CC=CCC1 produces bond-change events
+  ✓ Multiple reactants -> single product (amide formation): >=4 mapped atoms
+  ✓ Single reactant -> multiple products (ether cleavage): >=3 heavy atoms map
+  ✓ Pre-mapped atoms are preserved
+  ✓ Unbalanced reaction CCO>>CC returns status=unbalanced under v2.0.10 strict pre-check
+  ✓ Unbalanced reaction with requireStoichiometricBalance=false keeps legacy permissive behaviour
+  ✓ Empty product side: reaction returns empty mapping with warning
+  ✓ Empty reactant side: returns empty mapping
+  ✓ Empty molecule (no atoms) is handled gracefully
+  ✓ RDT.mapReaction is deterministic across 3 runs
+  ✓ All 4 strategies produce non-null results on benzene chlorination
+  ✓ Selector picks the fitness-best strategy on benzene chlorination
+  ✓ annotateBondChanges identifies a cleaved bond directly
+  ✓ fitness rewards no-change (identity reaction has fitness <= 0)
+  ✓ fitness penalises bond changes
+  ✓ mapReaction mutates the reaction so all 6 atoms carry mapNumber > 0
+  ✓ Mapped atoms come in pairs (same map on both sides)
+  ✓ options.strategies can restrict the strategy set
+  ✓ Long timeoutMs is respected without spurious timeouts
+  → RDT (AAM): 33 passed, 0 failed
+
+AAM (RDT extended)
+  ✓ MIN on CCO>>CC=O maps all 3 heavy atoms
+  ✓ MAX on CCO>>CC=O maps all 3 heavy atoms
+  ✓ MIXTURE on CCO>>CC=O maps all 3 heavy atoms
+  ✓ RING on CCO>>CC=O maps all 3 heavy atoms (falls back to MAX-style on ring-free)
+  ✓ MIN on CCBr.[OH-]>>CCO.[Br-] maps 2 atoms (the two carbons)
+  ✓ MAX on CCBr.[OH-]>>CCO.[Br-] maps 2 atoms
+  ✓ MIXTURE on CCBr.[OH-]>>CCO.[Br-] maps 2 atoms
+  ✓ RING on CCBr.[OH-]>>CCO.[Br-] maps 2 atoms (no rings, falls back)
+  ✓ MIN on benzene chlorination maps 1 atom (smallest-match policy: the chlorine)
+  ✓ MAX on benzene chlorination maps 7 atoms (6 ring + 1 Cl)
+  ✓ MIXTURE on benzene chlorination maps 7 atoms
+  ✓ RING on benzene chlorination maps 7 atoms (6-ring + Cl filler)
+  ✓ All 4 strategies map heavy atoms on Diels-Alder (MIN=2, MAX=4, MIXTURE=4, RING=3)
+  ✓ All 4 strategies produce non-empty mappings on amide formation
+  ✓ mapReaction on esterification: 3 runs give identical signature
+  ✓ Short timeoutMs (1) returns a well-formed result without crashing
+  ✓ Pre-mapped atoms keep their map numbers as 1<->1, 2<->2
+  ✓ Empty reactant side: returns empty mapping with a warning
+  ✓ Empty product side: returns empty mapping with a warning
+  ✓ Disconnected reactants (CC.NN>>CCNN) map all 4 atoms via leftover-atom rescue
+  ✓ Disconnected products (CCOCC>>CCO.CC) map >=3 reactant heavy atoms
+  ✓ [H][H]>>[H][H] maps both hydrogen atoms (hydrogens treated as atoms)
+  ✓ Reduction CC=O.[H][H]>>CCO maps the full C-C-O backbone (3 atoms each side)
+  ✓ options.strategies = [MIN] pins MIN as the winner
+  ✓ options.strategies = [RING] pins RING as the winner
+  → AAM (RDT extended): 25 passed, 0 failed
+
+SMSD MCS (extended)
+  ✓ aspirin vs salicylic acid → MCS = 9-10 atoms (the salicylate scaffold)
+  ✓ caffeine vs theobromine → MCS >= 12 atoms (purine core)
+  ✓ ibuprofen vs naproxen → MCS >= 10 atoms
+  ✓ mcs(CC.NN, CCNN) returns 3 atoms (the CCN backbone is fully shared)
+  ✓ mcs(CCO, CCN) with timeoutMs=1 still returns a result
+  ✓ aspirin-salicylic-acid MCS has matching bonds in g2
+  ✓ mcsOpts.minSize is advisory: result.size may be smaller than minSize
+  ✓ aspirin vs salicylic acid Tanimoto in (0.5, 1.0)
+  ✓ mcs(c1ccccc1, c1ccccc1) Tanimoto = 1.0 (identical)
+  ✓ Symmetric MCS on 5 pairs
+  ✓ mcs([C@H](N)(C)O, [C@@H](N)(C)O) maps all 4 heavy atoms (stereo not enforced at v1.x)
+  ✓ mcs(aspirin, aspirin).size = 13 (all heavy atoms)
+  ✓ mcs(C, CC) = 1 (single C atom)
+  ✓ mcs(C, C) = 1 (degenerate single-atom identity)
+  ✓ mcs(N, C) = 0 (different element, no overlap)
+  → SMSD MCS (extended): 15 passed, 0 failed
+
+SUB (SMARTS extended)
+  ✓ phenyl c1ccccc1 in toluene → >=12 matches (one benzene ring with symmetry)
+  ✓ phenyl c1ccccc1 in ethylbenzene → >=12 matches
+  ✓ phenyl c1ccccc1 in diphenylmethane → 24 matches (two rings)
+  ✓ carboxylic acid C(=O)O in aspirin → 2 matches (acid + ester)
+  ✓ carboxylic acid C(=O)O in ibuprofen → 1 match
+  ✓ carboxylic acid C(=O)O in naproxen → 1 match
+  ✓ amide C(=O)N in paracetamol → 1 match
+  ✓ amide C(=O)N in phenacetin → 1 match
+  ✓ aromatic N [n] in pyridine → 1 match
+  ✓ aromatic N [n] in imidazole → 2 matches
+  ✓ aromatic N [n] in pyrimidine → 2 matches
+  ✓ sulfonamide S(=O)(=O)N in CS(=O)(=O)N → 2 matches (S=O dual symmetry)
+  ✓ recursive SMARTS [$([CX3]=[OX1])] in acetone → 1 match (the C=O carbon)
+  ✓ phenyl c1ccccc1 in (benzene . ethane) target → matches only the benzene
+  ✓ phenyl c1ccccc1 in pure-aliphatic disconnected target → 0 matches
+  ✓ [R] in benzene → 6 matches (every C is a ring atom)
+  ✓ [R] in ethane → 0 matches (no ring atoms)
+  ✓ N in benzene → 0 matches
+  ✓ [#6] in cyclohexane → 6 matches
+  ✓ CCC in 50-atom alkane completes in < 100ms
+  → SUB (SMARTS extended): 20 passed, 0 failed
+
+Bond Changes (BC)
+  ✓ Carbonyl reduction CC=O>>CCO yields exactly 1 orderChange event
+  ✓ Hydration C=C.O>>CCO yields 2 heavy-atom events after v1.4.2 rescue
+  ✓ Hydrogenation C=C.[H][H]>>CC yields exactly 1 orderChange
+  ✓ Esterification CC(=O)O.OCC>>CC(=O)OCC.O yields cleaved+formed events
+  ✓ Hydrolysis CC(=O)OCC.O>>CC(=O)O.OCC yields exactly 2 cleaved events
+  ✓ SN2 CCBr.[OH-]>>CCO.[Br-] yields exactly 1 cleaved event (the C-Br bond)
+  ✓ Diels-Alder C=CC=C.C=C>>C1CC=CCC1 yields >=4 heavy-atom bond-change events
+  ✓ Identity CCO>>CCO yields zero bond-change events
+  ✓ Isomerization CCC>>CC=C yields exactly 1 bond-change event
+  ✓ Ring-opening C1CCCCC1>>CCCCCC yields exactly 1 cleaved event
+  ✓ Ring-closing CCCCCC>>C1CCCCC1 yields exactly 1 formed event
+  ✓ Stereo flip [C@H](N)(C)O>>[C@@H](N)(C)O: 1 stereoChange under v1.2.0 defaults
+  ✓ Stereo flip with includeStereo=false suppresses stereoChange (opt-out)
+  ✓ Bond-change atom IDs all reference real reactant atoms
+  ✓ Bond-change events are sorted deterministically (reactantBond ascending)
+  ✓ Mirror reaction CC(=O)O>>OC(=O)C: formed === cleaved (both zero)
+  → Bond Changes (BC): 16 passed, 0 failed
+
+Canonical SMILES (Canon)
+  ✓ idempotence: canon(canon(ethanol)) === canon(ethanol)
+  ✓ idempotence: canon(canon(benzene)) === canon(benzene)
+  ✓ idempotence: canon(canon(naphthalene)) === canon(naphthalene)
+  ✓ idempotence: canon(canon(pyridine)) === canon(pyridine)
+  ✓ idempotence: canon(canon(pyrrole)) === canon(pyrrole)
+  ✓ idempotence: canon(canon(indole)) === canon(indole)
+  ✓ idempotence: canon(canon(caffeine)) === canon(caffeine)
+  ✓ idempotence: canon(canon(aspirin)) === canon(aspirin)
+  ✓ idempotence: canon(canon(acetic_acid)) === canon(acetic_acid)
+  ✓ idempotence: canon(canon(glucose)) === canon(glucose)
+  ✓ idempotence: canon(canon(phenol)) === canon(phenol)
+  ✓ equivalence: ethanol two orderings (CCO, OCC)
+  ✓ equivalence: naphthalene two ring-opening orders
+  ✓ equivalence: pyrrole two ring-opening orders
+  ✓ equivalence: acetic acid two writings (CC(=O)O, O=C(C)O)
+  ✓ equivalence: toluene two ring-opening orders (Cc1ccccc1, c1ccc(C)cc1)
+  ✓ equivalence: phenylacetic acid two ring-opening orders
+  ✓ equivalence: N-methylpyrrolidine two writings (CN1CCCC1, N1(C)CCCC1)
+  ✓ equivalence: glucose (no stereo) two ring-opening orders
+  ✓ determinism: 5 canon runs of aspirin produce identical output
+  ✓ determinism: 5 canon runs of caffeine produce identical output
+  ✓ determinism: 5 canon runs of glucose produce identical output
+  ✓ aromatic preference: c1ccccc1 (benzene) canonicalises to lowercase aromatic
+  ✓ aromatic preference: n1ccccc1 (pyridine) canonicalises to lowercase aromatic
+  ✓ aromatic preference: c1cc[nH]c1 (pyrrole) canonicalises to lowercase aromatic with [nH]
+  ✓ round-trip canonical: ammonium [NH4+] is stable on second pass
+  ✓ round-trip canonical: 13C-labelled ethyl [13C]CC is stable on second pass
+  ✓ round-trip canonical: tetrahedral stereocentre [C@H](N)(O)F is stable on second pass
+  ✓ edge case: empty SMILES "" canonicalises to ""
+  ✓ edge case: methane "C" canonicalises to "C"
+  ✓ permutation invariance: cubane → one canonical form over 32 atom orderings
+  ✓ permutation invariance: adamantane → one canonical form over 32 atom orderings
+  ✓ permutation invariance: aspirin → one canonical form over 32 atom orderings
+  ✓ permutation invariance: EDTA → one canonical form over 32 atom orderings
+  ✓ permutation invariance: caffeine → one canonical form over 32 atom orderings
+  ✓ permutation invariance: naphthalene → one canonical form over 32 atom orderings
+  ✓ permutation invariance: glucose → one canonical form over 32 atom orderings
+  ✓ integrity: canon output of every idempotence case re-parses without errors
+  ✓ integrity: equivalence pairs preserve atom and bond counts after canonicalisation
+  ✓ CIPStereo.assign() + SmilesWriter.write() complete on under-valenced stereocentre — regression for v1.1.3 permutationParity fix
+  → Canonical SMILES (Canon): 40 passed, 0 failed
+
+  ✓ benzene: 6-ring places cleanly
+  ✓ cyclopentane: saturated 5-ring places cleanly
+  ✓ naphthalene: fused 6-6 places cleanly
+  ✓ biphenyl: two benzenes connected by a single bond
+  ✓ aspirin: substituted benzene with carboxylic acid + ester
+  ✓ caffeine: fused 5-6 N-rich heterocycle
+  ✓ glucose: pyranose with ring O at sensible position
+  ✓ fructose: open-chain ketohexose (no ring)
+  ✓ ribose: furanose 5-ring with O
+  ✓ cholesterol: steroid skeleton with side chain
+  ✓ testosterone: 4 fused rings + ketone
+  ✓ estradiol: aromatic A-ring steroid
+  ✓ penicillin G: beta-lactam thiazolidine with acyl side chain
+  ✓ atropine: tropane bicyclic + ester side chain
+  ✓ memantine: substituted adamantane cage stays compact
+  ✓ built-in Memantine library preview uses adamantane cage
+  ✓ built-in Borneol and Camphor previews keep bridged cages clean
+  ✓ built-in Clotrimazole preview keeps triaryl centre separated
+  ✓ umeclidinium: library SMILES keeps diaryl carbinol bonds sane
+  ✓ umeclidinium: alternate ring index order avoids linker stretch
+  ✓ diphenylmethane: flexible single-bond linker remains compact
+  ✓ azobenzene: conjugated linker is not treated as flexible single-bond bridge
+  ✓ useSDG=true restores pre-SDG layout if SDG throws after mutation
+  ✓ morphine: 5 fused rings, finite coords, no collisions
+  ✓ codeine: morphine methyl ether, same skeleton
+  ✓ ethanol: simple acyclic
+  ✓ disconnected: two methanes separated
+  → Layout (2D coordinate generation): 27 passed, 0 failed
+
+RDT v1.2.0 features
+  ✓ A1. Ethanol oxidation CCO>>CC=O emits exactly 2 hydrogenChange events (-1, -1)
+  ✓ A2. Ethanol oxidation orderChange + hydrogenChange total = 3
+  ✓ A3. Carbonyl reduction CC=O.[H][H]>>CCO emits 2 hydrogenChange events (+1, +1)
+  ✓ A4. SN2 CCBr.[OH-]>>CCO.[Br-] emits 0 hydrogenChange (heavy-atom skeleton preserved)
+  ✓ A5. Aromatic chlorination produces a -1 deltaH on the substituted ring carbon
+  ✓ A6. options.includeHydrogens=false suppresses all hydrogenChange events
+  ✓ A7. Identity CCO>>CCO emits 0 hydrogenChange (no atoms change H count)
+  ✓ A8. hydrogenChange events carry deltaH, beforeH, afterH, atom, productAtom
+  ✓ A9. Hydration C=C.O>>CCO emits 1 orderChange + >=1 hydrogenChange
+  ✓ A10. Isomerization CCC>>CC=C emits hydrogenChange entries with summing deltaH = -2
+  ✓ B1. _bipartiteComponentPairing exists on the public API
+  ✓ B2. Bipartite pairing on a 1x1 weight matrix returns the single pair
+  ✓ B3. Bipartite pairing prefers max-weight 4+1 over greedy-min 1+3 on a 2x2 matrix
+  ✓ B4. useBipartitePostPass=true on esterification with strategies=[MIN] re-pairs to 5 mapped atoms
+  ✓ B5a. v1.3.0 default (bipartite ON) on esterification with strategies=[MIN] re-pairs to 5 atoms
+  ✓ B5b. Explicit opt-out (v1.2.x legacy) on esterification with strategies=[MIN] keeps the 4-atom greedy
+  ✓ B6. Bipartite is a no-op on a reaction whose greedy is already optimal
+  ✓ B7. Bipartite handles unequal component counts (rN != pN) by zero-padding
+  ✓ B8. Bipartite drops zero-weight pairs (no spurious matches)
+  ✓ C1. SN2-style direct stereo flip [C@H](N)(C)O>>[C@@H](N)(C)O emits 1 stereoChange (R<->S)
+  ✓ C2. stereoChange event carries before/after, atom, productAtom, mapNumber fields
+  ✓ C3. options.includeStereo=false suppresses stereoChange events
+  ✓ C4. Achiral reaction CCO>>CC=O emits 0 stereoChange
+  ✓ C5. Mapping does not crash if CIPStereo is unavailable (best-effort behaviour)
+  ✓ C6. CIP perception inside mapReaction does not regress mapping count
+  ✓ C7. RDT.version matches current bundle version
+  → RDT v1.2.0 features: 26 passed, 0 failed
+
+RDT v1.4.0 mol-mol features
+  ✓ A1. Single-component reaction CCO>>CC=O yields 1 component pair
+  ✓ A2. Two-reactant + two-product esterification yields >=2 pairs
+  ✓ A3. Spectator [Na+] participates in pairing — >=3 paired
+  ✓ A4. Stoichiometric mismatch (3 reactants -> 2 products) emits paletteIndex=-1
+  ✓ A5. Reaction with no reactant side returns componentPairs = []
+  ✓ B1. Identity reaction CCO>>CCO has confidence === 1.0
+  ✓ B2. Disjoint reaction CC.OO.NN>>CO.CO has confidence < 0.5
+  ✓ B3. Esterification CC(=O)O.OCC>>CC(=O)OCC.O confidence in [0.5, 1.0]
+  ✓ C1. First N pairs get paletteIndex 0..N-1
+  ✓ C2. Palette index can exceed length (renderer wraps modulo)
+  ✓ C3. Unpaired components get paletteIndex === -1
+  ✓ D1. Renderer.componentPairColors(componentPairs) returns N+1 entries
+  ✓ D2. Renderer.colorAtoms = false suppresses halo circles
+  ✓ D3. Renderer halos appear with correct fill colour when colorAtoms = true
+  ✓ D4. Halo opacity is 0.5
+  → RDT v1.4.0 mol-mol features: 15 passed, 0 failed
+
+RDT v1.4.1 sub-fragment features
+  ✓ E1. Identity reaction CCO>>CCO yields exactly one sub-fragment of size 3
+  ✓ E2. Two-component esterification yields >=2 sub-fragments
+  ✓ E3. Empty reaction yields zero sub-fragments
+  ✓ E4. Sub-fragments are ordered by descending size
+  ✓ E5. paletteIndex is 0..N-1 in order
+  ✓ E6. options.minSize=2 drops singleton sub-fragments
+  ✓ E7. reactantAtomIds and productAtomIds match by mapping
+  ✓ E8. reactantAtomIds and productAtomIds are sorted ascending
+  ✓ E9. Bond cleavage breaks the union — CC>>C.C yields two sub-fragments
+  ✓ E10. Determinism — repeated derive on same result yields identical output
+  ✓ F1. deriveSubFragments(null) returns []
+  ✓ F2. deriveSubFragments({}) returns []
+  ✓ F3. deriveSubFragments(result without sides) returns []
+  ✓ G1. Sub-fragment halo count matches reactantAtomIds + productAtomIds
+  ✓ G2. Sub-fragment halos use the COMPONENT_PAIR_PALETTE colours
+  ✓ G3. Same paletteIndex on both sides of arrow (atom-atom continuity)
+  ✓ G4. Renderer.colorAtoms = false suppresses sub-fragment halos
+  ✓ H1. Methyl transfer R-CH3 + R'-OH -> R-OH + R'-CH3 yields >=2 sub-frags
+  ✓ H1b. Diels-Alder C=CC=C.C=C>>C1CC=CCC1 yields >=4 heavy bond-change events
+  ✓ H2. RDT-style multi-colour: A + B -> AB shows scaffold preservation
+  → RDT v1.4.1 sub-fragment features: 20 passed, 0 failed
+
+RDT v1.4.2 leftover-atom rescue
+  ✓ I1. RDT.version matches current bundle version
+  ✓ I2. benzene + Cl -> chlorobenzene maps BOTH chlorines
+  ✓ I3. componentPairs shows rescued component as paired
+  ✓ I4. Bond change c4-Cl is correctly flagged as formed after rescue
+  ✓ I5. confidence > 0.85 for benzene + Cl -> chlorobenzene
+  ✓ J1. Rescue refuses to match Cl with Br (different element)
+  ✓ J2. Rescue refuses to match different charges
+  ✓ K1. Identity reaction CCO>>CCO unchanged after rescue pass
+  ✓ K2. Esterification CC(=O)O.OCC>>CC(=O)OCC.O — rescue catches the OH oxygen
+  ✓ K3. Two-reactant joining: methylation R-OH + CH3-X -> R-O-CH3 + HX
+  ✓ L1. _rescueLeftoverAtoms returns false when no candidates exist
+  ✓ L2. _rescueLeftoverAtoms maps element-matched leftover atom
+  ✓ L3. _rescueLeftoverAtoms is deterministic across repeat calls
+  → RDT v1.4.2 leftover-atom rescue: 13 passed, 0 failed
+
+Toolbar customization v1.4.3
+  ✓ M1. Module exposes load/save/reset/applyToGroups/applyToAtomBar/snapshot
+  ✓ M2. snapshot(GROUPS, ATOMS) produces a valid prefs object
+  ✓ M3. save then load round-trips identical prefs
+  ✓ M4. reset clears localStorage so next load returns null
+  ✓ M5. load returns null when localStorage is unavailable
+  ✓ M6. validate rejects malformed prefs
+  ✓ M7. corrupted localStorage entry yields load() === null
+  ✓ N1. applyToGroups with null prefs returns canonical groups unchanged
+  ✓ N2. applyToGroups reorders groups per prefs.groupOrder
+  ✓ N3. applyToGroups drops hidden groups
+  ✓ N4. applyToGroups reorders items within a group
+  ✓ N5. applyToGroups hides items via hiddenItems (explicit user-hide)
+  ✓ N5b. applyToGroups appends new items NOT in items AND NOT in hiddenItems
+  ✓ N6. applyToGroups appends a NEW canonical group not yet in prefs
+  ✓ O1. applyToAtomBar with null prefs returns canonical atoms unchanged
+  ✓ O2. applyToAtomBar drops symbols not in prefs.atomBar
+  ✓ O3. applyToAtomBar rejects symbols not in canonical bar (anti-tamper)
+  ✓ O4. applyToAtomBar deduplicates repeated symbols
+  ✓ P1. Round-trip: save a custom layout, reload, applyToGroups matches
+  ✓ P2. RDT.version stamp matches the bundle release
+  ✓ P3. ToolbarPrefs.version stamp matches the bundle release
+  → Toolbar customization v1.4.3: 21 passed, 0 failed
+
+Library search v1.5.0
+  ✓ Q1. MolEditor.prototype.searchLibrary is a function
+  ✓ Q2. searchLibrary returns a Promise
+  ✓ Q3. searchLibrary rejects on unknown mode
+  ✓ R1. Exact match: CCO finds Ethanol
+  ✓ R2. Exact match: c1ccccc1 finds Benzene
+  ✓ R3. Exact match: novel SMILES yields zero hits
+  ✓ S1. Similarity: c1ccccc1 retrieves Benzene/Phenol/Toluene above threshold
+  ✓ S2. Similarity: respects threshold (high threshold = fewer hits)
+  ✓ S3. Similarity: respects topN cap
+  ✓ T1. Substructure: c1ccccc1 finds aromatic ring containers
+  ✓ T2. Substructure: each hit carries matchCount > 0
+  ✓ U1. MCS: c1ccccc1 retrieves benzene-ring-bearing molecules with score >= 0.3
+  ✓ U2. MCS: identity match (Benzene against c1ccccc1) yields score = 1.0
+  ✓ V1. resetLibraryCache forces re-parse on next call
+  ✓ V2. searchLibrary rejects when COMMON_MOLECULES is empty
+  ✓ V3. failed early built-in search does not poison later library cache
+  ✓ V4. RDT.version stamp matches current bundle
+  ✓ V5. searchLibrary can yield between chunks without changing ranked results
+  ✓ W1. options.targets accepts a custom 5-entry list and searches it instead
+  ✓ W2. options.targets caps at MolEditor.USER_LIBRARY_LIMIT (100)
+  ✓ W3. options.targets rejects when the user list is empty
+  ✓ W4. MolEditor.USER_LIBRARY_LIMIT exposes the cap as a public constant
+  ✓ X1. highlightSearchMatch substructure: ring atoms get atom.highlighted = true
+  ✓ X2. highlightSearchMatch exact: every atom gets highlighted
+  ✓ X3. highlightSearchMatch similarity: zero atoms highlighted (whole-mol score)
+  ✓ X4. highlightSearchMatch mcs: at least 1 matched atom for shared scaffold
+  ✓ X5. highlightSearchMatch resets prior highlights before applying new ones
+  → Library search v1.5.0: 27 passed, 0 failed
+
+  ✓ Template.pyrrolidine instantiates with finite coords + on-grid atoms
+  ✓ Template.cyclobutane instantiates with finite coords + on-grid atoms
+  ✓ Template.cycloheptane instantiates with finite coords + on-grid atoms
+  ✓ Template.tetrahydropyran instantiates with finite coords + on-grid atoms
+  ✓ Template.oxazole instantiates with finite coords + on-grid atoms
+  ✓ Template.isoxazole instantiates with finite coords + on-grid atoms
+  ✓ Template.triazole123 instantiates with finite coords + on-grid atoms
+  ✓ Template.triazole124 instantiates with finite coords + on-grid atoms
+  ✓ Template.betalactam instantiates with finite coords + on-grid atoms
+  ✓ Template.xanthine instantiates with finite coords + on-grid atoms
+  ✓ Template.pyrrolopyrimidine instantiates with finite coords + on-grid atoms
+  ✓ Template.benzodiazepine instantiates with finite coords + on-grid atoms
+  ✓ Template.benzothiophene instantiates with finite coords + on-grid atoms
+  ✓ Template.quinoxaline instantiates with finite coords + on-grid atoms
+  ✓ Template.cinnoline instantiates with finite coords + on-grid atoms
+  ✓ Template.phthalazine instantiates with finite coords + on-grid atoms
+  ✓ Template.beta_carboline instantiates with finite coords + on-grid atoms
+  ✓ Template.anthracene instantiates with finite coords + on-grid atoms
+  ✓ Template.pyrene instantiates with finite coords + on-grid atoms
+  ✓ Template.fluorene instantiates with finite coords + on-grid atoms
+  ✓ Template.biphenyl instantiates with finite coords + on-grid atoms
+  ✓ Template.terphenyl instantiates with finite coords + on-grid atoms
+  ✓ Template.penam instantiates with finite coords + on-grid atoms
+  ✓ Template.cepham instantiates with finite coords + on-grid atoms
+  ✓ Template.carbapenem instantiates with finite coords + on-grid atoms
+  ✓ Template.tetracycline instantiates with finite coords + on-grid atoms
+  ✓ Template.quinuclidine instantiates with finite coords + on-grid atoms
+  ✓ Template.pyrrolizidine instantiates with finite coords + on-grid atoms
+  ✓ Template.indolizidine instantiates with finite coords + on-grid atoms
+  ✓ Template.quinolizidine instantiates with finite coords + on-grid atoms
+  ✓ Template.aporphine instantiates with finite coords + on-grid atoms
+  ✓ Template.dibenzazepine instantiates with finite coords + on-grid atoms
+  ✓ Template.chroman instantiates with finite coords + on-grid atoms
+  ✓ Template.flavanone instantiates with finite coords + on-grid atoms
+  ✓ Template.flavone instantiates with finite coords + on-grid atoms
+  ✓ Template.linear_hexose instantiates with finite coords + on-grid atoms
+  ✓ Template.linear_pentose instantiates with finite coords + on-grid atoms
+  ✓ All v1.5.2 templates are deterministic across repeat calls
+  ✓ Layout: tryptamine (indole) produces finite coords with sensible bond lengths
+  ✓ Layout: caffeine (purine/xanthine) produces finite coords with sensible bond lengths
+  ✓ Layout: imidazole (5-mem) produces finite coords with sensible bond lengths
+  ✓ Layout: naphthalene (polycyclic linear-2) produces finite coords with sensible bond lengths
+  ✓ Layout: penicillin G core (penam) produces finite coords with sensible bond lengths
+  ✓ Layout: diazepam (benzodiazepine) produces finite coords with sensible bond lengths
+  ✓ Layout: chlorpromazine (phenothiazine) produces finite coords with sensible bond lengths
+  ✓ Layout: biphenyl produces finite coords with sensible bond lengths
+  ✓ Layout: quinoxaline produces finite coords with sensible bond lengths
+  ✓ Layout: fluorene produces finite coords with sensible bond lengths
+  ✓ Every TEMPLATE_LOOKUP candidate has a matching Templates.* function
+  → Layout v1.5.2 scaffold templates: 49 passed, 0 failed
+
+  ✓ bond-length stddev < 5% BOND_LENGTH on 20-atom chain mol (decanol)
+  ✓ bond-length stddev < 5% BOND_LENGTH on 4 fused rings (steroid)
+  ✓ para-cresol benzene draws with substituent edge horizontal
+  ✓ methoxybenzene substituents point radially OUTWARD from ring
+  ✓ naphthalene long-axis horizontal: width > height by >= 1.3x
+  ✓ determinism: same SMILES => byte-identical coordinates across runs
+  ✓ enforceConventions=false produces v1.5.1-style layout (no exceptions)
+  → Layout v1.5.2 chemistry conventions: 7 passed, 0 failed
+
+
+=== v1.6.0 ML residual depict quality gate ===
+  ✓ MLDepict module exposes API
+  ✓ weights file present and reasonable size
+  ✓ weights load + arch matches
+  ✓ forward pass is deterministic
+  ✓ v1.8.0: source-code one-hot changes prediction
+  ✓ forward pass output is finite and bounded
+  ✓ useMLDepict=false leaves v1.5.2 coords unchanged (caffeine)
+  ✓ useMLDepict=false: benzene + glucose remain stable
+  ✓ useMLDepict=true keeps every test molecule chemically sound
+  ✓ useMLDepict=true forward pass is deterministic per atom
+  ✓ useMLDepict=true on metabolite-style SMILES is safe
+  ✓ single-atom species: parse + layout (ML off and on)
+  ✓ multi-fragment ionic mixtures: side-by-side layout
+  ✓ ML refineLayout no-ops cleanly on singleton mols
+  ✓ v1.7.1: file group with New button is registered at row 1
+  ✓ v1.7.1: changed() clears mol.name when not loading
+  ✓ v1.6.3/v1.8.42: toolbar layout routes groups correctly
+  ✓ v1.6.2: default tool is Select (not Bond)
+  ✓ v1.6.1: MolEditor constructor completes without _atomBarButtons crash
+  → v1.6.0 ML depict: 19 passed, 0 failed
+
+Layout chromophore (v1.8.x SDG benchmark)
+  ✓ parses C32H22N6O3S bisazo dye without error
+  ✓ SMILES round-trip preserves atom + bond counts
+  ✓ contains exactly two N=N (azo) double bonds
+  ✓ Layout.layout() runs to completion with finite coords
+  ✓ every 6-ring stays within current bond-length spread (CURRENT lock)
+  ✓ every 6-ring stays within current angle deviation (CURRENT lock)
+  ✓ TARGET — every 6-ring is a regular hexagon (advisory until SDG)
+  ✓ layout aspect ratio holds at current floor (CURRENT lock)
+  ✓ TARGET — chromophore lays out as a >=3:1 rod (advisory until SDG)
+  ✓ layout is deterministic across runs
+  → Layout chromophore (v1.8.x SDG benchmark): 10 passed, 0 failed
+
+  ✓ LayoutQuality flags impossible bonds and severe atom clashes
+  ✓ LayoutQuality counts non-shared bond crossings
+  ✓ LayoutQuality accepts saturated cage projection crossings
+  ✓ Layout.quality reports clean hard status after normal scaffold layout
+  ✓ TemplateHandler best-fit rotates and translates a mapped template
+  ✓ TemplateHandler degenerate target fallback keeps template expanded and centered
+  → SDG layout quality and template fitting v1.8.37: 6 passed, 0 failed
+
+Atom shortcuts v2.0.3
+  ✓ A1. Ph expands to a 6-atom aromatic ring (C6H5-)
+  ✓ A2. Me expands to a single carbon
+  ✓ A3. Et expands to C-C (two-carbon chain)
+  ✓ A4. iPr expands to a Y-shaped C-C-C (central CH with two CH3)
+  ✓ A5. tBu expands to a 4-carbon star (central C with three CH3)
+  ✓ A6. Bn expands to CH2-phenyl (methylene + 6-aromatic ring)
+  ✓ A7. Bz expands to C(=O)-phenyl (benzoyl group)
+  ✓ B1. Gly is a single labelled atom (R-group form)
+  ✓ B2. Ala / Ser / Val / Leu each collapse to one labelled atom
+  ✓ B3. GlyAla is two residue nodes joined by a single bond
+  ✓ B4. GlyAlaSer is a 3-node residue chain
+  ✓ B5. Residue placeholders round-trip through SmilesWriter
+  ✓ B6. [Gly] bracket form parses to the same residue atom as bare Gly
+  ✓ B7. Residues attach cleanly to ordinary chemistry (CGly, PhGly)
+  ✓ C1. Phenyl as a branch (CC(Ph)C) bonds the parent C to ring atom 0
+  ✓ C2. PhCC continues from Ph (treating Ph as one node)
+  ✓ C3. Ring digits inside an abbreviation do NOT collide with outer rings
+  ✓ C4. Screenshot SMILES: 'C(O)(Ph)Ph' now parses with two phenyls
+  ✓ D1. Br (bromine, organic two-char) is unaffected
+  ✓ D2. Cl (chlorine) is unaffected
+  ✓ D3. Bracket atoms (e.g. [Pt]) are unaffected — abbreviation lookup is BEFORE the case-based dispatch but Pt is bracketed
+  ✓ D4. Single-letter organic atoms still work (P phosphorus etc.)
+  ✓ D5. Aromatic ring c1ccccc1 (lowercase atom literals) still works
+  ✓ D6. Alanine canonical SMILES N[C@@H](C)C(=O)O still parses with chirality
+  ✓ D7. Morphine round-trip (v1.8.34 canary) is unaffected — no atom in the molecule starts with an abbreviation prefix
+  → Atom shortcuts v2.0.3: 25 passed, 0 failed
+
+AAM quality v2.0.10
+  ✓ S1. CCO>>CC (lost O) returns status=unbalanced + elementDelta.O=1
+  ✓ S2. CCO>>CCO (identity) has status=mapped and elementDelta absent
+  ✓ S3. requireStoichiometricBalance:false restores legacy permissive flow
+  ✓ S4. Heavy-atom-only counting: CC=O.[H][H]>>CCO is balanced (explicit H ignored)
+  ✓ S5. Multi-element imbalance reports every offending element
+  ✓ M1. fitness signature accepts an opts argument (backward compat)
+  ✓ M2. opts.mechanisticPlausibility:false yields a numeric, finite fitness
+  ✓ M3. Mechanistic penalty fires when a cleaved bond sits INSIDE an amide
+  ✓ K1. Default topK=1 still returns a candidates array (winner only)
+  ✓ K2. topK=4 returns up to 4 candidates sorted ascending by score
+  ✓ K3. decisiveness is finite in [0, 1] for an ordinary mapping
+  ✓ K4. confidence and decisiveness are independent fields
+  ✓ R1. Identity reactions classify as reactionClass=identity
+  ✓ R2. Hydrolysis (formed + cleaved) classifies as substitution
+  ✓ R3. Alcohol oxidation classifies as redox
+  ✓ R4. Ring opening (cyclopropane) classifies as ring-opening
+  ✓ R5. Diels-Alder classifies as ring-closing
+  ✓ R6. options.detectReactionClass=false omits both fields
+  ✓ R6b. _detectReactionClass is exported and callable directly (v2.0.14)
+  ✓ R7. classReason includes the bond-change counts
+  ✓ P1. MCS-cache ON equals MCS-cache OFF byte-for-byte (result-identity)
+  ✓ P2. mapReaction is deterministic across repeated calls (per-call cache, no leak)
+  ✓ K5. Every return path carries a status field
+  → AAM quality v2.0.10: 23 passed, 0 failed
+
+Reaction Equation (v2.0.16)
+  ✓ A1 elementCounts: water O has 2 implicit H
+  ✓ A2 formulaString: water is H2O (C-less => alphabetical, H included)
+  ✓ A3 formulaString: ethanol is C2H6O (Hill: C, H, then alpha)
+  ✓ A4 formulaString: count of 1 omits the digit
+  ✓ A5 formulaString: empty counts -> empty string
+  ✓ B1 no arrow => no plus signs
+  ✓ B2 single reactant -> single product => no plus signs
+  ✓ B3 two reactants -> one product => exactly one plus (reactant side)
+  ✓ B4 two reactants -> two products => two plus signs (one per side)
+  ✓ B5 three reactants -> one product => two plus on reactant side
+  ✓ B6 classification follows arrow midpoint, not sign of x
+  ✓ C1 combustion-style: 2 H2 + O2 -> 2 H2O collapses with coefficients
+  ✓ C2 single species each side, coefficient 1 omitted
+  ✓ C3 balanced esterification model is reported balanced
+  ✓ C4 distinct species sharing a formula stay separate under canonical key
+  ✓ C5 default keyFn groups by formula (isomers merge)
+  ✓ C6 empty side renders a placeholder, not a crash
+  ✓ C7 redox half-reaction [Fe+2] -> [Fe+3]: element-balanced but NOT balanced (charge)
+  ✓ C8 charge-neutral salt metathesis stays balanced
+  → Reaction Equation (v2.0.16): 19 passed, 0 failed
+
+Metabolite Library (v2.0.19)
+  ✓ A1 library exposes metabolites, pathways, find()
+  ✓ A2 every entry is well-formed
+  ✓ B1 all display:structure SMILES parse with >0 atoms
+  ✓ B2 key formulas are correct (chemistry sanity)
+  ✓ C1 find() resolves canonical name, alias, and is case-insensitive
+  ✓ C2 big cofactors are labelled nodes, not drawn
+  ✓ D1 glycolysis has the 11 canonical steps and maps to KEGG map00010
+  ✓ D2 every step substrate/product resolves in the library
+  ✓ D3 every step has a valid arrow type, EC, and enzyme
+  ✓ D4 the three irreversible commitment steps use forward arrows
+  ✓ E1 TCA cycle template is present, shape cycle, and closes
+  ✓ E2 every TCA step resolves + has a valid arrow type and EC
+  ✓ E3 key TCA-intermediate formulas are correct (chemistry sanity)
+  ✓ E4 the three irreversible TCA steps use forward arrows
+  ✓ F1 Urea cycle template is present, shape cycle, 4-step closure
+  ✓ F2 every Urea step resolves + valid arrow type and EC
+  ✓ F3 key urea-cycle formulas are correct (chemistry sanity)
+  ✓ F4 all four urea-cycle steps are physiologically irreversible (forward)
+  ✓ G1 PPP template is present with shape branched + 4-node trunk
+  ✓ G2 every PPP step resolves + valid arrow type + EC
+  ✓ G3 key PPP-intermediate formulas are correct (chemistry sanity)
+  ✓ G4 the three oxidative-phase steps are forward; non-oxidative isomerase/epimerase reversible
+  ✓ H1 pyruvate fates template is present with fanout shape + 4 branch reactions
+  ✓ H2 every pyruvate-fates branch resolves + valid arrow type + EC
+  ✓ H3 pyruvate-fates arrow policy keeps fermentative reduction reversible and oxidative/carboxylating fates forward
+  ✓ I1 β-oxidation template is present with shape loop-iterative + 4 reactions
+  ✓ I2 every β-oxidation step resolves + valid arrow type + EC
+  ✓ I3 key β-oxidation-intermediate formulas are correct (S-methyl thioester abbreviation, chemistry sanity)
+  ✓ I4 β-oxidation arrow policy: oxidation + thiolysis forward, hydration + dehydrogenation reversible
+  → Metabolite Library (v2.0.19): 29 passed, 0 failed
+
+Atom Trace (v2.0.20)
+  ✓ A1 mapStep maps a simple oxidation backbone (CCO -> CC=O)
+  ✓ B1 two-step chain produces a path of length 3 for a conserved atom
+  ✓ C1 D-glucose contributes exactly 6 carbon traces
+  ✓ C2 all 6 glucose carbons survive to fructose-1,6-bisphosphate (pre-aldolase)
+  ✓ C3 the aldolase cleavage forks the skeleton — only 3 carbons enter GAP
+  ✓ C4 three glucose carbons trace all the way to pyruvate
+  ✓ C5 every step of the backbone atom-maps (status mapped)
+  ✓ D1 renderInteractiveSvg emits one addressable group per heavy atom
+  ✓ D2 renderInteractiveSvg handles an empty molecule without throwing
+  → Atom Trace (v2.0.20): 9 passed, 0 failed
+
+Shared Helpers (v2.0.33)
+  ✓ A1 xmlEscape escapes all five predefined entities in correct order
+  ✓ A2 xmlEscape handles & first so existing entities are not double-escaped
+  ✓ A3 xmlAttr also strips XML-1.0-illegal C0 control chars
+  ✓ A4 xmlAttr preserves tab / LF / CR (the XML-legal whitespace exceptions)
+  ✓ A5 xmlAttr strips lone surrogate halves (XML 1.0 §2.2 illegal)
+  ✓ A6 xmlAttr strips U+FFFE and U+FFFF
+  ✓ A7 stripIllegal removes illegal chars without entity-escaping
+  ✓ B1 cloneEndpoint preserves atom-kind endpoints
+  ✓ B2 cloneEndpoint preserves bond-kind endpoints
+  ✓ B3 remapEndpoint dispatches atom vs bond and applies the right map
+  ✓ B4 remapEndpoint passes unknown id through unchanged
+  ✓ B5 endpointKey returns atomId for atom endpoints, bondId for bond endpoints
+  ✓ B6 normaliseEndpoint validates kind first, then per-kind id field
+  → Shared Helpers (v2.0.33): 13 passed, 0 failed
+
+Pyrene template (v2.0.35)
+  ✓ A1 16 atoms, 19 bonds, fully aromatic
+  ✓ A2 every atom is carbon
+  ✓ B1 every bond length is exactly BL ± 0.05 px
+  ✓ C1 degree distribution: 10 peripheral (deg 2, 1 H each) + 6 internal (deg 3, no H)
+  ✓ C2 exactly 4 distinct 6-membered cycles (pyrene SSSR)
+  ✓ C3 atoms 0 (10b) and 1 (10c) are each in 3 of the 4 rings
+  ✓ D1 TEMPLATE_LOOKUP routes "4:6,6,6,6" through pyrene
+  ✓ E1 BIME parses pyrene SMILES + Layout.layout produces finite coords
+  → Pyrene template (v2.0.35): 8 passed, 0 failed
+
+Page Formats (v2.0.38)
+  ✓ A1 FORMATS has screen, a4, and letter
+  ✓ A2 every format has portrait + landscape sub-sizes
+  ✓ B1 screen format is the legacy 1200×620 viewBox (backward compat)
+  ✓ B2 A4 dimensions match 210×297 mm at 96 DPI
+  ✓ B3 US Letter dimensions match 8.5×11 in at 96 DPI
+  ✓ C1 viewBoxFor returns the SVG viewBox string
+  ✓ C2 isKnown accepts valid pairs, rejects invalid
+  ✓ D1 sizeFor falls back to defaults on unknown format
+  ✓ D2 sizeFor falls back to landscape on unknown orientation
+  ✓ E1 formatList enumerates {key, label} for every format
+  → Page Formats (v2.0.38): 10 passed, 0 failed
+
+AAM diagnostic (v2.0.41)
+  ✓ A1 gradeMapping returns "unmapped" when status !== "mapped"
+  ✓ A2 gradeMapping returns "A" for a high-confidence, high-decisiveness mapping with no aromatic / stereo loss
+  ✓ A3 gradeMapping degrades to "B" when confidence drops just below A threshold
+  ✓ A4 gradeMapping degrades to "C" for moderate-confidence mappings
+  ✓ A5 gradeMapping degrades to "F" below the C threshold
+  ✓ B1 aromatic-ring count is zero for an empty mapping
+  ✓ B2 aromatic-ring count reports the reactant total when atoms are unmapped
+  ✓ C1 stereo-preserved count is zero/zero for an empty mapping
+  ✓ D1 mapReaction result carries the new "quality" and "diagnostic" fields by default
+  ✓ D2 mapReaction with includeDiagnostic:false skips the diagnostic compute (opt-out)
+  ✓ D3 deriveDiagnostic on a real result returns mappedCount matching the mapping size
+  ✓ E1 benzene → benzene identity: aromatic ring is preserved when atoms map
+  ✓ F1 existing v2.0.10 fields (status, mapping, score, confidence, decisiveness) still present
+  → AAM diagnostic (v2.0.41): 13 passed, 0 failed
+
+Chemistry-aware fitness (v2.0.46)
+  ✓ A1 default mapReaction (no opts) produces the same score as v2.0.45
+  ✓ A2 mapReaction with chemistryAware:false matches default behaviour
+  ✓ B1 chemistryAware:true on a benzene→benzene identity gives a score <= default
+  ✓ B2 fitness() helper accepts chemistryAware opt
+  ✓ C1 a partial mapping that drops an aromatic ring atom incurs the ring-break penalty
+  ✓ D1 golden-corpus marker reactions still map cleanly with default opts (no regression)
+  → Chemistry-aware fitness (v2.0.46): 6 passed, 0 failed
+
+Renderer CanvasView interop (v2.0.48)
+  ✓ A1 canvasView() converts world-space offset to screen-space offset
+  ✓ A2 canvasView() handles unit scale (no-op offset)
+  ✓ B1 applyCanvasView() converts screen-space offset back to world-space
+  ✓ B2 applyCanvasView() ignores zero-scale views (defensive)
+  ✓ C1 round-trip preserves the renderer state when no view op is applied
+  ✓ C2 CanvasView.zoom on canvasView() applied back gives the expected scale
+  ✓ C3 CanvasView.zoom with a screen pivot translates correctly through canvasView ↔ Renderer
+  ✓ D1 screen → world via CanvasView matches the Renderer arithmetic
+  → Renderer CanvasView interop (v2.0.48): 8 passed, 0 failed
+
+Unmapped reasons (v2.0.49)
+  ✓ A1 result.diagnostic.unmappedReasons is an object (empty when fully mapped)
+  ✓ B1 deriveUnmappedReasons returns an empty map when given an empty result
+  ✓ B2 deriveUnmappedReasons classifies "no-partner-element" when the other side lacks the element
+  ✓ B3 deriveUnmappedReasons classifies "cofactor-side-only" when this side has MORE of the element than the other
+  ✓ B4 deriveUnmappedReasons classifies "no-isomorphic-partner" when same-element atoms exist but mapping skipped
+  ✓ B5 mapped atoms do NOT appear in unmappedReasons
+  ✓ C1 includeDiagnostic:false skips unmappedReasons computation
+  → Unmapped reasons (v2.0.49): 7 passed, 0 failed
+
+Unmapped reasons timeout (v2.0.50)
+  ✓ D1 timedOut=true promotes "no-isomorphic-partner" to "timeout"
+  ✓ D2 timedOut=true promotes "orphan-after-rescue" to "timeout" (no strategyResults)
+  ✓ D3 timedOut=true does NOT override "no-partner-element"
+  ✓ D4 timedOut=true does NOT override "cofactor-side-only"
+  ✓ D5 timedOut=false leaves classifications unchanged (back-compat)
+  ✓ D6 mapped atoms remain absent under timedOut=true
+  ✓ E1 deriveDiagnostic propagates timeout reasons via unmappedReasons
+  → Unmapped reasons timeout (v2.0.50): 7 passed, 0 failed
+
+Renderer ↔ CanvasView call-site migration (v2.0.51)
+  ✓ A1 _tx(x) equals CanvasView.worldToScreen(canvasView(), x, _).x at identity
+  ✓ A2 _tx / _ty equal CanvasView.worldToScreen at non-identity view
+  ✓ B1 screenToMol returns the same world coords as the v2.0.50 inline formula
+  ✓ B2 screenToMol round-trips: screen -> mol -> _tx/_ty -> screen
+  ✓ C1 centerMolecule on a non-reaction molecule matches the v2.0.50 inline result
+  ✓ C2 centerMolecule on a reaction auto-scales and centres
+  ✓ C3 centerMolecule reaction-scale is clamped to the [0.3, 1.6] band
+  ✓ C4 centerMolecule is a no-op on null / empty molecule
+  ✓ D1 centerMolecule offset formula equals v2.0.50 inline arithmetic (single molecule)
+  → Renderer ↔ CanvasView call-site migration (v2.0.51): 9 passed, 0 failed
+
+Draw Structure promotion (v2.0.52)
+  ✓ A1 workbench.html — Tools toolbar contains a "Draw Structure" button bound to add-pathway-current
+  ✓ A2 workbench.html — the promoted button uses the solid primary-action styling, not the tool-toggle styling
+  ✓ A3 workbench.html — the command-grid add-pathway-current button is preserved (redundant placement is intentional)
+  ✓ B1 css/workbench.css — adds the .wb-pathway-tools-sep visual separator
+  ✓ B2 css/workbench.css — adds the .wb-pathway-stamp-action emphasis style
+  ✓ C1 addCurrentMoleculeToPathway — empty editor branch calls setWorkbenchMode("molecule")
+  ✓ C2 addCurrentMoleculeToPathway — empty branch shows the v2.0.52 hint pointing back at "Draw Structure"
+  ✓ C3 addCurrentMoleculeToPathway — pre-v2.0.52 "Draw or load a structure first" hint is replaced
+  ✓ D1 js/workbench.js — dispatcher routes add-pathway-current to addCurrentMoleculeToPathway
+  → Draw Structure promotion (v2.0.52): 9 passed, 0 failed
+
+Atom-trace DAG topology (v2.0.53)
+  ✓ A1 tracePathway without options.edges still uses the v2.0.20 linear chain
+  ✓ B1 tracePathway with options.edges uses the provided DAG edges
+  ✓ B2 array-pair edges [u, v] are accepted alongside object-style {from, to}
+  ✓ B3 empty / malformed edges fall back to the linear default (defensive)
+  ✓ C1 labels[m][k] is now an array of start-atom indices (multi-valued)
+  ✓ D1 glycolysis DAG mode produces the 11 real reactions, not the v2.0.52 phantoms
+  ✓ D2 glycolysis: pyruvate carbon atoms each have TWO glucose-carbon ancestors (textbook biochemistry)
+  ✓ D3 glycolysis: every glucose carbon that reaches pyruvate via either path is reachesEnd=true
+  ✓ D4 glycolysis: trace path for a glucose carbon includes BOTH DHAP and GAP via the TPI route
+  ✓ E1 _topoSort returns a valid order for the glycolysis DAG
+  ✓ E2 _topoSort returns null on a cycle (DAG invariant guard)
+  ✓ E3 _reachableFrom marks the reachable set correctly under a fork
+  ✓ F1 AtomTrace.version is at least 2.0.53 (forward-compatible check)
+  → Atom-trace DAG topology (v2.0.53): 13 passed, 0 failed
+
+Moiety trace (v2.0.54)
+  ✓ A1 deriveMoietyTrace returns version 2.0.54 + mirrors moietyAtoms + emits startBonds
+  ✓ B1 deriveMoietyTrace rejects an empty moiety with error="empty-moiety"
+  ✓ B2 deriveMoietyTrace rejects a disconnected moiety with error="not-connected"
+  ✓ B3 deriveMoietyTrace requires metaboliteSmiles in options
+  ✓ C1 C-C bond of ethanol → acetaldehyde → acetic acid stays preserved end-to-end
+  ✓ C2 bond-order change (C-O -> C=O) is NOT counted as moiety breakage
+  ✓ D1 single-atom moiety reduces to single-atom trace presence
+  ✓ E1 both criteria are honoured; phosphate is intact through PEP, lost at pyruvate
+  ✓ F1 glycolysis: G6P phosphate (PO3) survives strict-intact through ~8 metabolites
+  ✓ F2 glycolysis: at pyruvate the phosphate moiety is "partial-loss" (most atoms gone)
+  ✓ G1 perMetabolite entries carry the documented fields
+  ✓ H1 tracePathway output unchanged for non-moiety callers (v2.0.53 backward-compat)
+  ✓ H2 AtomTrace.version is at least 2.0.54 (forward-compatible check)
+  → Moiety trace (v2.0.54): 13 passed, 0 failed
+
+SVG hardening (v2.0.55)
+  ✓ A1 a normal SMILES-parsed molecule still renders one <g> per heavy atom
+  ✓ A2 two-letter halogen symbols (Cl, Br, etc.) still render correctly
+  ✓ B1 atom.symbol containing angle brackets is replaced with "?"
+  ✓ B2 atom.symbol that is not a string at all (number, object, null) is replaced with "?"
+  ✓ B3 atom.symbol with 3+ characters or non-Latin chars is replaced with "?"
+  ✓ C1 AtomTrace.version is at least 2.0.55 (forward-compatible)
+  → SVG hardening (v2.0.55): 6 passed, 0 failed
+
+Cofactor lineage (v2.0.56)
+  ✓ A1 COFACTOR_SMILES has the eight common metabolic cofactors
+  ✓ A2 lookupCofactorSmiles handles canonical names + aliases case-insensitively
+  ✓ B1 parseCofactorString handles "ATP → ADP" (the common arrow form)
+  ✓ B2 parseCofactorString handles multi-token "NAD+ + Pi → NADH"
+  ✓ B3 parseCofactorString handles leading "+ X + Y → Z" (TCA step 1 style)
+  ✓ B4 parseCofactorString handles one-sided "− H2O" loss
+  ✓ B5 parseCofactorString handles one-sided "+ H2O" gain
+  ✓ B6 parseCofactorString returns empty on empty/non-string
+  ✓ C1 GAPDH (GAP + Pi → 1,3BPG): Pi atoms appear in the product metabolite
+  ✓ D1 enolase (2PG → PEP + H2O): a reactant 2PG atom leaves into H2O
+  ✓ E1 mapStep without cofactor opts returns the v2.0.55 shape
+  ✓ E2 mapStep WITH cofactor opts forwards to mapStepWithCofactors
+  ✓ F1 tracePathway with cofactors fills cofactorLabels and cofactorExits
+  ✓ F2 cofactor labels propagate downstream (Pi-origin atoms in BPG persist into 3PG)
+  ✓ F3 tracePathway without cofactors leaves cofactorLabels EMPTY (backward compat)
+  ✓ G1 AtomTrace.version is at least 2.0.56 (forward-compatible check)
+  → Cofactor lineage (v2.0.56): 16 passed, 0 failed
+
+chemistryAware default-on (v2.0.57)
+  ✓ A1 default mapReaction (no opts) applies the chemistry penalty
+  ✓ A2 explicit chemistryAware:false drops the chemistry penalty
+  ✓ B1 nitration of benzene maps with default chemistryAware
+  ✓ B2 SN2 inversion of (R)-bromobutane to (S)-butanol maps with default chemistryAware
+  ✓ B3 ester hydrolysis maps with default chemistryAware
+  ✓ C1 mapReaction default produces the same mapping as chemistryAware:true
+  ✓ D1 RDT.version stamp is at least 2.0.57
+  → chemistryAware default-on (v2.0.57): 7 passed, 0 failed
+
+Marquee moiety select (v2.0.58)
+  ✓ A1 workbench.js declares handleAtomTraceMouseDown / Move / Up
+  ✓ A2 workbench.js wires the three handlers onto the document
+  ✓ B1 DRAG_THRESHOLD_PX is at least 3 (avoids accidental drags from tiny mouse jitter)
+  ✓ B2 click handler short-circuits on _suppressNextAtomTraceClick
+  ✓ C1 marquee hit-test uses cx/cy of .bime-trace-atom-hit
+  ✓ C2 shift+drag EXTENDS an existing moiety; plain drag REPLACES it
+  ✓ D1 renderAtomTraceMarquee creates an SVG rect with class bime-trace-marquee
+  ✓ D2 marquee rect uses pointer-events="none" so it does not block atom hit-tests
+  ✓ E1 css/workbench.css declares .bime-trace-marquee fill + stroke
+  ✓ E2 atom-trace cell SVG has a crosshair cursor (marquee hint)
+  ✓ F1 handleTraceAtomClick is still wired in the click dispatcher
+  → Marquee moiety select (v2.0.58): 11 passed, 0 failed
+
+Cofactor lineage UI (v2.0.59)
+  ✓ A1 showAtomTraceStrip builds a traceCofactors array via parseCofactorString
+  ✓ A2 traceOpts is extended with the cofactors spec
+  ✓ B1 showAtomTraceStrip lifts result.cofactorLabels into cofactorLabelsByCell
+  ✓ B2 render loop applies is-cofactor-origin class to atoms with cofactor records
+  ✓ B3 render loop creates an SVG <title> tooltip naming the cofactor source
+  ✓ C1 css/workbench.css declares the .is-cofactor-origin halo style
+  ✓ C2 cofactor halo defers to the primary single-trace amber and moiety teal
+  ✓ D1 AtomTrace exports parseCofactorString + COFACTOR_SMILES (v2.0.56 surface)
+  ✓ D2 AtomTrace.version is at least 2.0.59 (forward-compat check)
+  → Cofactor lineage UI (v2.0.59): 9 passed, 0 failed
+
+Edit pathway structure (v2.0.60)
+  ✓ A1 addCurrentMoleculeToPathway branches on _pathway.selectedType==="node"
+  ✓ A2 in-place branch applies the full structure payload to the selected node
+  ✓ A2b payload stores full molecule/reaction text separate from display subtitle
+  ✓ A3 in-place branch returns early — does NOT also stamp a new node
+  ✓ B1 editPathwayNodeStructure is defined
+  ✓ B2 editPathwayNodeStructure guards on selection + loads saved structure into the editor
+  ✓ B3 node structure input prefers reaction RXN, then MOL, then SMILES
+  ✓ B4 node structure input never parses display subtitles as chemistry
+  ✓ B5 built-in pathway examples store editable structure payloads on nodes
+  ✓ B6 double-clicking a pathway node opens structure editing
+  ✓ C1 dispatcher routes edit-pathway-structure to editPathwayNodeStructure
+  ✓ D1 workbench.html has Edit-Structure buttons in BOTH the Tools row and the Structure command group
+  ✓ D2 Draw Structure button tooltip mentions in-place update on selected node
+  ✓ D3 the command-grid add-pathway-current button is preserved and documents the in-place behaviour
+  ✓ D4 command-grid "Update" button is relabelled to "Update Labels"
+  → Edit pathway structure (v2.0.60): 15 passed, 0 failed
+
+Pathway context menu (v2.0.61)
+  ✓ A1 js/workbench.js declares showPathwayContextMenu / hidePathwayContextMenu / resolvePathwayContextTarget
+  ✓ A2 js/workbench.js declares handlePathwayCanvasContextMenu + pathwayContextMenuItems
+  ✓ A3 contextmenu event listener is wired onto document
+  ✓ A4 ESC + click-outside dismiss the menu
+  ✓ B1 node target carries Edit Structure / Duplicate / Copy SMILES / Delete
+  ✓ B2 edge target carries Reverse + Cycle arrow type + Delete
+  ✓ B3 empty canvas target carries Add-X-here + Clean Up + Fit
+  ✓ C1 dispatcher routes all eight context-* actions
+  ✓ C2 every dispatcher case calls hidePathwayContextMenu() before its handler
+  ✓ D1 css/workbench.css carries .wb-context-menu + .wb-context-menu-item + .wb-context-menu-divider
+  ✓ D2 .wb-context-menu uses position:fixed + a high z-index
+  ✓ E1 context action handlers are all declared
+  ✓ E2 contextDuplicateNode uses pushPathwayHistory so the duplicate is undoable
+  ✓ E3 contextCopySmiles falls back gracefully when clipboard API is unavailable
+  ✓ E4 contextCopySmiles prefers the saved structure payload over subtitle text
+  ✓ E5 contextDuplicateNode preserves the saved structure payload
+  → Pathway context menu (v2.0.61): 16 passed, 0 failed
+
+bime CLI (v2.0.62)
+  ✓ A1 bin/bime exists and is executable
+  ✓ A2 tools/bime-cli.js exports the subcommand functions
+  ✓ B1 bime version prints BIME + module versions
+  ✓ B2 bime help prints the top-level help
+  ✓ B3 unknown subcommand exits non-zero
+  ✓ C1 bime parse benzene produces a 6-atom 6-bond report
+  ✓ C2 bime parse --format json emits JSON
+  ✓ C3 bime parse reads from stdin when no positional
+  ✓ D1 bime clean returns a canonical SMILES (toluene)
+  ✓ E1 bime aam on a balanced reaction emits status=mapped
+  ✓ E2 bime aam --format json produces a parseable AAM result
+  ✓ E3 bime aam --keep-mapping uses the input :n mapping (no re-solve)
+  ✓ E4 bime aam --keep-mapping --format svg renders a figure from the existing mapping
+  ✓ E5 bime aam --keep-mapping fails fast on a reaction with NO atom-map numbers
+  ✓ F-gated: pathway subcommands are unavailable in the core build
+  ✓ G1 bime export --format smiles round-trips a SMILES
+  ✓ G2 bime export --format svg emits an <svg> document
+  ✓ G3 bime export --format mol emits a MOL V2000 block
+  ✓ G3b bime export --format sdf emits a MOL block terminated by $$$$ (v2.0.64 fix)
+  ✓ G3c bime export --format rxn round-trips a reaction SMILES
+  ✓ G4 bime export --format png is refused (no Canvas in Node)
+  ✓ G5 bime export --out writes to a file
+  → bime CLI (v2.0.62): 22 passed, 0 failed
+
+RC/BC/mapped-atom highlights (v2.0.63)
+  ✓ A1 Renderer constructor declares bondChanges + showReactionCenter + showBondChanges + colorOverrides + showMappedAtoms
+  ✓ A2 Renderer declares _drawReactionCenter + _drawMappedAtomHalos
+  ✓ A3 _drawReactionCenter paints a dashed amber halo on every bondChange-participant atom
+  ✓ A4 render() calls _drawReactionCenter when showReactionCenter is on AND bondChanges is non-empty
+  ✓ A5 _drawBond overrides stroke colour for cleaved/formed/orderChange/stereoChange when showBondChanges is on
+  ✓ B1 MolEditor.toggleReactionCenter / toggleBondChanges / toggleMappedAtoms are declared
+  ✓ B2 MolEditor.setColorOverride + clearColorOverrides are declared
+  ✓ B3 AAM result auto-forwards bondChanges onto the renderer
+  ✓ B4 clearComponentPairs ALSO clears renderer.bondChanges (lockstep clear)
+  ✓ C1 a duck-typed MolEditor.toggleReactionCenter flips renderer.showReactionCenter
+  ✓ C2 setColorOverride writes + clearColorOverrides resets the map
+  → RC/BC/mapped-atom highlights (v2.0.63): 11 passed, 0 failed
+
+Export stamp (v2.0.65)
+  ✓ A1 stampRecord on empty content emits a sha384 (or fallback) hex digest
+  ✓ A2 stampRecord is deterministic for the same content + opts
+  ✓ B1 stampSvg injects <metadata id="bime-stamp"> with BIME version + hash
+  ✓ B2 stampSvg injects a bottom-right BIME wordmark + 6-vertex glyph at low opacity
+  ✓ B3 stampSvg is idempotent — restamping replaces the existing block
+  ✓ B4 stampSvg preserves a pre-existing <title> (user-authored)
+  ✓ B5 stampSvg with watermark:false skips the wordmark but keeps the metadata
+  ✓ C1 stampText on MOL prepends a BIME-STAMP-BEGIN/END comment block
+  ✓ C2 stampText on SMILES appends the stamp BELOW the SMILES (first line stays clean)
+  ✓ C3 stampText is idempotent — restamping replaces the block
+  ✓ C4 stampText hash is computed over the UN-stamped content (verifiable by stripping)
+  ✓ D1 extractStamp recovers project + version + hash from a stamped SVG
+  ✓ D2 extractStamp recovers project + version + hash from a stamped MOL
+  ✓ D3 extractStamp returns null on unstamped content
+  ✓ E1 bime export --format svg emits a stamped SVG by default
+  ✓ E2 bime export --format mol emits a stamped MOL by default
+  ✓ E3 bime export --no-stamp opt-out drops the stamp
+  ✓ E4 bime export --format smiles --no-stamp returns a bare SMILES
+  ✓ F1 ExportStamp.version exists
+  → Export stamp (v2.0.65): 19 passed, 0 failed
+
+Stamp policy (v2.0.66)
+  (AGENTS.md not present — internal policy suite skipped)
+  → Stamp policy (v2.0.66) [skipped]: 0 passed, 0 failed
+
+Stamp version lockstep (v2.0.70)
+  ✓ A1 ExportStamp.version matches versions.json bime field
+  ✓ B1 stampRecord embeds the current version
+  ✓ B2 stampSvg embeds the current version in the <metadata> block
+  ✓ B3 stampText (SMILES) embeds the current version in the trailer
+  ✓ C1 versions.json, CITATION.cff, package.json all agree
+  ✓ C2 editor/RDT.js + editor/ToolbarPrefs.js + editor/SMSDVersion.js stamps agree
+  ✓ D1 AtomTrace.version (module stamp) equals versions.json bime
+  ✓ D2 moiety-trace RESULT-format version is frozen, NOT release-tracked
+  ✓ E1 USER_GUIDE bime-version example matches the current release
+  → Stamp version lockstep (v2.0.70): 9 passed, 0 failed
+
+AAM grade calibration (v2.0.72)
+  ✓ A1 A grade: confidence ≥ 0.95, decisiveness ≥ 0.3, ARC + stereo high
+  ✓ A2 A grade fails when decisiveness < 0.3 (ties at optimum should NOT earn A even with high confidence)
+  ✓ A3 B grade: confidence ≥ 0.75, no decisiveness gate
+  ✓ A4 C grade: confidence ≥ 0.5, no decisiveness gate
+  ✓ A5 F grade: confidence below the C floor
+  ✓ A6 unmapped status overrides everything
+  ✓ B1 every pre-v2.0.72-passing B still grades ≥ B post-recalibration
+  ✓ B2 every pre-v2.0.72-passing C still grades ≥ C
+  ✓ C1 high-confidence + tied strategies + preserved aromaticity → B
+  ✓ C2 mid-confidence + tied strategies → C (not F)
+  → AAM grade calibration (v2.0.72): 10 passed, 0 failed
+
+Aromaticity N-substituted (v2.0.74)
+  ✓ A1 N-methylpyrrole (aromatic input) → 5 aromatic atoms
+  ✓ A2 N-methylimidazole → 5 aromatic atoms
+  ✓ A3 1-methylindole → 9 aromatic atoms (both fused rings)
+  ✓ A4 Kekule N-methylpyrrole CN1C=CC=C1 → 5 aromatic atoms
+  ✓ A5 caffeine imidazole ring is perceived aromatic (>= 5 atoms)
+  ✓ B1 benzene → 6
+  ✓ B2 pyridine → 6 (degree-2 N stays pyridine-type)
+  ✓ B3 pyrrole [nH] → 5 (unchanged)
+  ✓ B4 pyridinium [nH+] → 6 (protonated N stays pyridine-type, ring aromatic)
+  ✓ B5 naphthalene → 10 (unchanged)
+  ✓ B6 piperidine → 0 (saturated N-ring NOT aromatised)
+  ✓ B7 N-methylpiperidine → 0 (saturated, sp3 C guard holds)
+  ✓ C1 writer emits aromatic lowercase for N-methylimidazole
+  → Aromaticity N-substituted (v2.0.74): 13 passed, 0 failed
+
+CanvasSurface (v2.0.75)
+  ✓ A1 CanvasSurface re-exports every CanvasView function by reference
+  ✓ A2 delegated math behaves identically through CanvasSurface
+  ✓ B1 transformString is byte-identical to the legacy pathway literal
+  ✓ B2 transformString tolerates a missing/partial view
+  ✓ C1 applyTransform writes transformString to the element
+  ✓ C2 applyTransform is a no-op on a null/setAttribute-less target
+  ✓ D1 pick returns the item whose bbox contains the point
+  ✓ D2 pick returns the TOPMOST (last-added) item on overlap
+  ✓ D3 clear empties the registry; count/all reflect contents
+  ✓ D4 mutating all() does not corrupt the registry
+  ✓ E1 CanvasSurface.version is a frozen tier-2 stamp
+  → CanvasSurface (v2.0.75): 11 passed, 0 failed
+
+Metabolite stereochemistry (v2.1.0)
+  ✓ A:L-Ornithine has the corrected (S) α-carbon (L-amino acid) token
+  ✓ A:L-Citrulline has the corrected (S) α-carbon (L-amino acid) token
+  ✓ A:L-Arginine has the corrected (S) α-carbon (L-amino acid) token
+  ✓ A:L-Argininosuccinate has the corrected (S,S) both α-carbons (L) token
+  ✓ A:Glyceraldehyde 3-phosphate has the corrected (R) — D-GAP token
+  ✓ A:L-3-Hydroxybutyryl-CoA has the corrected (S) — L / β-oxidation intermediate token
+  ✓ B1 each corrected metabolite parses with its expected stereocentres
+  ✓ C1 D-β-Hydroxybutyrate keeps its (R) token
+  → Metabolite stereochemistry (v2.1.0): 8 passed, 0 failed
+
+CIP R/S engine (v2.1.1)
+  ✓ A L-Alanine centre [C,C,N] is (S)
+  ✓ A D-Alanine centre [C,C,N] is (R)
+  ✓ A L-Lactate centre [C,C,O] is (S)
+  ✓ A D-Glyceraldehyde centre [C,C,O] is (R)
+  ✓ A (R)-bromochlorofluoromethane centre [Br,Cl,F] is (R)
+  ✓ B1 L-Threonine: alpha-C (C,C,N) = S and beta-C (C,C,O) = R  [2S,3R]
+  ✓ B2 L-Isoleucine: both centres S  [2S,3S]
+  ✓ B3 D-Glucose (open chain) multiset is R,R,R,S  [2R,3S,4R,5R]
+  ✓ B4 meso-Tartaric is R,S; L-Tartaric is R,R; D-Tartaric is S,S
+  ✓ B5 library Isocitrate token labels (2R,3S) — D-threo, the IDH substrate
+  ✓ C1 L-Threonine: alpha=S, beta=R across 3 equivalent SMILES
+  ✓ C2 L-Isoleucine: both S across 3 equivalent SMILES
+  ✓ C3 D-Glucose: R,R,R,S multiset stable across 3 equivalent SMILES
+  ✓ D1 myo-Inositol ring centres are unlabelled, never wrong
+  ✓ E1 ribitol carries a pseudo-asymmetric r (multiset R,S,r), order-invariant
+  ✓ E2 ribaric acid carries a pseudo-asymmetric s (multiset R,S,s), order-invariant
+  ✓ E3 meso pentitol: two specified centres R,S; unspecified centre gets no spurious label
+  → CIP R/S engine (v2.1.1): 17 passed, 0 failed
+
+Focus lens (v2.3.0)
+  ✓ A1 FocusLens exposes create() + lensRectForNode() + a version stamp
+  ✓ B1 a fresh lens is closed
+  ✓ B2 open(id) focuses; close() clears; both idempotent
+  ✓ B3 open() ignores null/undefined/empty (no accidental focus)
+  ✓ B4 two lenses are independent (no shared state)
+  ✓ C1 identity view: rect equals the node rect
+  ✓ C2 scaled + translated view matches CanvasView.worldToScreen
+  ✓ C3 defensive: null node -> null; missing view fields default sanely
+  ✓ C4 the instance rectForNode() delegates to the module function
+  ✓ D1 the lens glue functions exist as top-level functions
+  ✓ D2 double-click handler still references editPathwayNodeStructure() (pinned) AND routes to the lens
+  ✓ D3 collapse commits through the EXISTING capture/apply + one history snapshot
+  ✓ E1 openStructureLens loads the node, opens the lens, and positions the overlay
+  ✓ E2 collapseStructureLens closes the lens after committing
+  ✓ E3 Escape and click-away both route to collapseStructureLens(true)
+  ✓ E4 renderPathwayCanvas repositions the overlay while the lens is open
+  ✓ F1 open -> positioned finite/clamped rect -> close clears focus
+  ✓ F2 a tiny off-canvas node still yields a clamped, min-sized overlay
+  → Focus lens (v2.3.0): 18 passed, 0 failed
+
+Focus-lens continuum (v2.3.1)
+  ✓ A1 setWorkbenchMode + syncWorkbenchLayoutMode are still defined
+  ✓ A2 the dispatcher still routes set-workbench-mode through the shim
+  ✓ A3 setWorkbenchMode no longer performs the legacy full-view swap
+  ✓ B1 addCurrentMoleculeToPathway still contains setWorkbenchMode('molecule')
+  ✓ B2 editPathwayNodeStructure still contains setWorkbenchMode('molecule') + load(source)
+  ✓ C1 editPathwayNodeStructure reaches openStructureLens(
+  ✓ D1 the empty-editor "Draw Structure" branch drops a fresh node into the lens
+  ✓ E1 the .wb-lens-open editor-overlay rule is the only editor-visible state
+  ✓ E2 the legacy full-screen-editor swap layout is retired
+  → Focus-lens continuum (v2.3.1): 9 passed, 0 failed
+
+Focus-scoped undo/redo (v2.3.2)
+  ✓ A1 onPathwayKeyDown has a lens-open branch that routes to the editor undo before pathway undo
+  ✓ A2 the lens branch arbitrates against MolEditor's document handler (stopPropagation + preventDefault)
+  ✓ A3 both the undo (z) and redo (y / shift+z) chords are covered by the lens branch
+  ✓ B1 openStructureLens clears the editor history after load(), before opening the lens
+  ✓ C1 collapseStructureLens pushes exactly one pushPathwayHistory(), inside the commit branch
+  ✓ C2 the no-commit (cancel) path skips the pathway snapshot
+  ✓ D1 lens OPEN routes every Ctrl+Z/Y to the editor; lens CLOSED routes to the pathway
+  ✓ D2 a Ctrl+Z is applied exactly once whether focus is in the editor or on the canvas (lens open)
+  ✓ D3 N atom edits in a focus session -> 1 pathway snapshot on commit
+  ✓ D4 N atom edits cancelled (Escape / click-away, no commit) -> 0 pathway snapshots
+  → Focus-scoped undo/redo (v2.3.2): 10 passed, 0 failed
+
+Continuum polish + cleanup (v2.3.3)
+  ✓ A1 the wb-modebar block keeps set-workbench-mode + the Editor/Pathway data-mode values (Hybrid view switch)
+  ✓ A2 the pinned occurrence counts are intact (no markup churn from the nit)
+  ✓ B1 onPathwayKeyDown has an Enter -> openStructureLens branch guarded by a node selection + no-lens condition
+  ✓ B2 the Enter branch sits AFTER the Ctrl+Z/Y lens-routing block (undo branches undisturbed)
+  ✓ C1 positionStructureLens flips LEFT-of-node on right overflow and ABOVE-node on bottom overflow
+  ✓ D1 no residual "mode toggle" comment remains in js/workbench.js
+  ✓ D2 collapseStructureLens still clears the inline overlay positioning (the comment's subject is intact)
+  → Continuum polish + cleanup (v2.3.3): 7 passed, 0 failed
+
+Focus-lens hardening (v2.3.4)
+  ✓ P0-1.1 renderPathwayNode appends a native <title> editable cue + is-structure class
+  ✓ P0-1.2 renderPathwayNode is NOT split by the cue (single top-level function)
+  ✓ P0-1.3 css advertises a hover affordance on is-structure nodes + a persistent selected cue
+  ✓ P0-2.1 a lens header builder + remover exist as top-level functions
+  ✓ P0-2.2 the header carries the node label + a Done and a Cancel button
+  ✓ P0-2.3 openStructureLens builds the header; collapseStructureLens removes it
+  ✓ P0-2.4 collapseStructureLens(false) DISCARDS — the commit block is guarded on commit
+  ✓ P0-2.5 a committed edit flashes the node + reports a "Saved" status (Esc still = Done)
+  ✓ P0-2.6 css styles the lens header + a reduced-motion-safe save flash
+  ✓ P0-3.1 openStructureLens sets role=dialog / aria-modal / aria-label + records prior focus
+  ✓ P0-3.2 openStructureLens moves focus INTO the overlay + installs a Tab trap
+  ✓ P0-3.3 onLensTrapKeydown cycles Tab/Shift+Tab within the overlay focusables
+  ✓ P0-3.4 collapseStructureLens removes the dialog attrs + trap and restores focus
+  ✓ P1-1.1 a dedicated click-away handler is bound (replacing the eager inline one)
+  ✓ P1-1.2 a mousedown on ANOTHER node HOPS the lens (commit then re-open)
+  ✓ P1-1.3 chrome / overlay / focused-node mousedowns do NOT dismiss
+  ✓ P1-1.4 only a bare canvas / background mousedown commits + collapses
+  ✓ E1 discard vs commit: a faithful model leaves the payload + history untouched on cancel
+  ✓ E2 dialog lifecycle: open sets role/aria + records focus; collapse clears + restores
+  ✓ E3 click-away routing: another-node mousedown HOPS; chrome is ignored; bare canvas dismisses
+  ✓ E4 the buildStructureLensHeader contract: Done=commit, Cancel=discard wiring
+  → Focus-lens hardening (v2.3.4): 21 passed, 0 failed
+
+First-run coherence (v2.3.5)
+  ✓ P0-4.1 the DOMContentLoaded boot no longer loads benzene by default
+  ✓ P0-4.2 the deep-link load branches are PRESERVED exactly
+  ✓ P0-4.3 the boot block documents the empty-editor default (no else-load arm)
+  ✓ P0-4.4 boot decision model: no deep link loads nothing; deep links still load
+  ✓ P0-4.5 Editor Output keeps its empty-state placeholder (coherent empty default)
+  ✓ P0-5.1 isPathwayEmpty + drawEmptyCanvasCta exist as top-level functions
+  ✓ P0-5.2 isPathwayEmpty checks EVERY pathway collection (matches clearPathwayCanvas)
+  ✓ P0-5.3 renderPathwayCanvas draws the CTA ONLY in the empty branch and is NOT split
+  ✓ P0-5.4 the CTA group is pointer-events:none + aria-hidden, and uses --color tokens
+  ✓ P0-5.5 the CTA copy is terse + on-brand (no emoji, no third-party names)
+  ✓ P0-5.6 css styles the CTA without animation (no prefers-reduced-motion concern)
+  ✓ P0-5.7 the no-deep-link boot RENDERS the empty canvas so the CTA shows on first paint
+  ✓ P1-3.1 the add-pathway-current action reads "Draw Structure" EVERYWHERE
+  ✓ P1-3.2 "Edit Structure" is consistent across Tools row + command grid
+  ✓ P1-3.3 both pan-copy strings state the TRUE pan affordance identically
+  ✓ P1-3.4 the pan copy matches the actual implementation (Shift / middle-button)
+  ✓ E1 drawEmptyCanvasCta model: builds a pointer-events:none, aria-hidden group with the copy
+  ✓ E2 render decision model: CTA drawn when empty, absent the moment content exists
+  → First-run coherence (v2.3.5): 18 passed, 0 failed
+
+Continuum on mobile (v2.3.6)
+  ✓ P0-6.1 isNarrowViewport + applyLensSheetLayout exist as top-level functions
+  ✓ P0-6.2 the mobile breakpoint constant matches the CSS 720px value
+  ✓ P0-6.3 positionStructureLens has a narrow-viewport branch that applies the sheet and RETURNS early
+  ✓ P0-6.4 positionStructureLens still keeps the desktop path (sheet OFF above the breakpoint)
+  ✓ P0-6.5 applyLensSheetLayout toggles .wb-lens-sheet on .wb-main and clears inline coords
+  ✓ P0-6.6 openStructureLens still builds the v2.3.4 header + dialog a11y (contract preserved)
+  ✓ P0-6.7 collapseStructureLens tears the sheet down (drops .wb-lens-sheet + restores the dock)
+  ✓ P0-6.8 the lens re-evaluates on resize while open (adapts across the breakpoint)
+  ✓ P0-6.9 CSS makes the lens a full-screen sheet under .wb-lens-sheet (<=720px)
+  ✓ P0-6.10 the sheet header is STICKY with >=44px tap targets (always-visible exit)
+  ✓ P0-7.1 the mobile dock no longer carries no-op-on-mobile editor buttons
+  ✓ P0-7.2 the dock drives CONTINUUM actions: Draw, canvas Fit, Inspect
+  ✓ P0-7.3 dock-draw routes to the SAME continuum entry point (no separate no-op)
+  ✓ P0-7.4 the Inspect toggle is accessible (aria-expanded + aria-controls)
+  ✓ P0-7.5 setMobileInspectorOpen toggles .wb-inspector-open + syncs aria-expanded
+  ✓ P0-7.6 Escape dismisses the inspector bottom sheet (after the lens)
+  ✓ P0-7.7 CSS: <=720px hides the inspector but .wb-inspector-open overrides it as a bottom sheet
+  ✓ P0-7.8 CSS: the dock hides while the sheet owns the screen (.wb-dock-hidden)
+  ✓ E1 narrow-viewport decision model: <=720px => sheet, >720px => anchored
+  ✓ E2 applyLensSheetLayout model: ON sets the class + clears coords + hides dock; OFF reverses
+  ✓ E3 inspector toggle model: flips .wb-inspector-open + aria-expanded, both directions
+  ✓ E4 the lens sheet keeps the v2.3.4 Done/Cancel contract (Done=commit, Cancel=discard)
+  → Continuum on mobile (v2.3.6): 22 passed, 0 failed
+
+Accessibility: non-colour cues + reachable canvas (v2.3.7)
+  ✓ A1 the badge helpers exist as top-level functions
+  ✓ A2 renderPathwayNode is NOT relocated and delegates to the badge helper
+  ✓ A3 each node type maps to a DISTINCT non-colour letter badge
+  ✓ A4 CSS styles the badge as a greyscale-readable chip (not colour-only)
+  ✓ B1 drawPathwayEdgeArrow is NOT relocated and the resonance shaft is dashed
+  ✓ B2 reversible draws harpoons (no full heads) and resonance draws two full heads
+  ✓ B3 the four arrow types have pairwise-distinct shape fingerprints
+  ✓ C1 CSS gives the four moiety verdicts DISTINCT border patterns
+  ✓ C2 the moiety status-tag helper exists and maps each verdict to a glyph+word
+  ✓ C3 showAtomTraceStrip stamps the status tag into the cell title (not colour-only)
+  ✓ D1 _drawArea gets role=img, tabindex=0 and an aria-label
+  ✓ D2 a visible focus-visible ring is injected for the draw area
+  ✓ D3 changed() refreshes the live description from the existing signal
+  ✓ D4 canvasDescription() reports "empty canvas" for a fresh molecule (REAL method)
+  ✓ D5 canvasDescription() reports the atom/bond tally + name + reaction (REAL method)
+  ✓ D6 canvasDescription() singularises a single atom / single bond (REAL method)
+  ✓ D7 _updateCanvasDescription() writes the description onto the draw-area aria-label (REAL method)
+  ✓ D8 _updateCanvasDescription() is a no-op when the draw area is absent (no throw)
+  → Accessibility: non-colour cues + reachable canvas (v2.3.7): 18 passed, 0 failed
+
+Toolbar clarity + live lens output (v2.3.8)
+  ✓ A1 the Tools toolbar still holds exactly the same buttons (count unchanged)
+  ✓ A2 each set-pathway-tool button carries a LEADING aria-hidden inline-SVG icon
+  ✓ A3 the two Tools-row stamp actions (Draw / Edit Structure) also get a leading icon
+  ✓ A4 the key VIEW actions (Zoom -/+, Fit, Clean Up) gain a leading icon too
+  ✓ A5 icons are ADDITIVE — no data-action, data-tool, or label TEXT changed
+  ✓ B1 a primary-tool class exists and marks Select + Draw Structure
+  ✓ B2 the primary class is styled in CSS
+  ✓ C1 the readout helpers exist as top-level functions
+  ✓ C2 buildStructureLensReadout builds an aria-live strip with SMILES + a warning count
+  ✓ C3 updateLensReadout reuses the EXISTING cached output signal (no new recompute)
+  ✓ C4 updateOutputNow drives the readout on the same per-change RAF path
+  ✓ C5 openStructureLens builds the readout; collapseStructureLens removes it
+  ✓ C6 the readout is styled (desktop overlay + mobile sheet) with --color tokens, no emoji
+  ✓ C7 the warning glyph is a text/SVG mark, not an emoji
+  ✓ D1 build creates an aria-live strip with a SMILES button + a warning badge
+  ✓ D2 update tracks edits: SMILES + warning count refresh, has-warnings toggles
+  ✓ D3 a long SMILES is truncated in the MIDDLE with an ellipsis
+  ✓ D4 an empty editor reads "No structure yet" and disables the copy button
+  ✓ D5 remove() tears the strip down (idempotent)
+  ✓ D6 rebuild does not double the strip (stale one removed first)
+  → Toolbar clarity + live lens output (v2.3.8): 20 passed, 0 failed
+
+Hybrid views: Editor | Pathway switch (v2.4.0)
+  ✓ A1 the modebar is a real tablist (role=tablist) and no longer hidden
+  ✓ A2 both tabs keep data-wb-action="set-workbench-mode" with role=tab + tabindex 0
+  ✓ A3 the tabs are labelled Editor (data-mode=editor) and Pathway (data-mode=pathway)
+  ✓ A4 the dispatcher still routes set-workbench-mode through setWorkbenchMode
+  ✓ B1 the default boot view _wbView is gated by PATHWAY_ENABLED (Pathway when enabled, Editor when hidden)
+  ✓ B2 setWorkbenchMode keeps the pinned openWorkbenchSection literal AND grows the view switch
+  ✓ B3 setWorkbenchMode does NOT hide the pathway section via the v2.3.1-A3-forbidden literal
+  ✓ B4 syncWorkbenchModeButtons reflects the active view via aria-selected (role=tab)
+  ✓ B5 syncWorkbenchLayoutMode defers the tab state to _wbView (not the section-open heuristic)
+  ✓ B6 the boot path stamps the default Pathway view class on .wb-main
+  ✓ C1 the Editor view shows the editor as the in-flow hero (display:flex)
+  ✓ C2 the Editor view hides the pathway canvas section
+  ✓ C3 CRITICAL: the focus-lens overlay rule still WINS (!important, keyed on .wb-lens-open)
+  ✓ C4 the base editor chrome is display:none (continuum + lens contract, v2.3.1 E1)
+  ✓ C5 the modebar is a VISIBLE tab bar (display:flex), no longer display:none
+  ✓ C6 the active tab carries a NON-COLOUR cue (weight + underline), not colour alone (v2.3.7)
+  ✓ D1 flipping to Editor stamps .wb-view-editor, hides pathway, selects the Editor tab, refits
+  ✓ D2 flipping back to Pathway restores .wb-view-pathway, re-shows the canvas, selects the Pathway tab
+  ✓ D3 legacy callers (e.g. setWorkbenchMode('molecule')) land on the default Pathway view
+  ✓ D4 CRITICAL: .wb-lens-open coexists with .wb-view-pathway (the focus lens survives in Pathway view)
+  ✓ D5 the lens does not reparent the editor: the switch only ever flips classes on .wb-main
+  → Hybrid views: Editor | Pathway switch (v2.4.0): 21 passed, 0 failed
+
+Add to pathway from the Editor view (v2.4.1)
+  ✓ A1 an "Add to pathway" button exists with data-wb-action="editor-add-to-pathway"
+  ✓ A2 the button sits in the Editor Output action row (near SMILES/Copy/Validate)
+  ✓ A3 the new button is ADDITIVE — the pinned import buttons are all preserved
+  ✓ B1 the click dispatcher routes editor-add-to-pathway to addEditorDrawingToPathway
+  ✓ B2 the pinned import-spine dispatcher wires are untouched
+  ✓ C1 addEditorDrawingToPathway is a NEW top-level function (does not relocate a pinned one)
+  ✓ C2 it guards the empty editor (no atoms) — friendly status, no node
+  ✓ C3 it branches on editor.molecule.reactionArrow (reaction vs molecule)
+  ✓ C4 the REACTION branch delegates to convertCurrentReactionToPathway()
+  ✓ C5 the MOLECULE branch clears the selection THEN delegates to addCurrentMoleculeToPathway()
+  ✓ C6 it ends by switching to the Pathway view and surfaces an "Added ..." status
+  ✓ C7 entering the Editor view clears the pathway selection (selectPathwayItem('', null))
+  ✓ C8 setWorkbenchMode keeps its v2.4.0 source-shape pins (grow, not relocate)
+  ✓ C9 the addCurrentMoleculeToPathway edit-in-place branch is untouched (v2.0.60 pin)
+  ✓ D1 molecule import: clears the stale selection, stamps exactly ONE fresh node, lands on Pathway
+  ✓ D2 reaction import (CCO>>CC=O shape): reactant + reaction step + product nodes and wired edges
+  ✓ D3 empty editor: no node is stamped, the view is unchanged, a friendly status is shown
+  → Add to pathway from the Editor view (v2.4.1): 17 passed, 0 failed
+
+Hybrid polish + cleanup (v2.4.3)
+  ✓ 1.1 captureEditorStructureForPathway routes the unnamed-molecule fallback through moleculeFormulaLabel before 'Structure'
+  ✓ 1.2 captureEditorStructureForPathway stays a single top-level function (source-shape pin)
+  ✓ 1.3 model: an unnamed CCO tags as its formula (C2H6O), not "Structure"
+  ✓ 1.4 model: a named molecule keeps its name; a formula-less molecule still falls back to "Structure"
+  ✓ 1.5 model: the reaction path is unchanged (named-or-"Reaction", never formula)
+  ✓ 2.1 drawEmptyCanvasCta keeps its v2.3.5 copy AND names the Editor tab
+  ✓ 2.2 the added CTA line stays on-brand: muted token, no emoji, in the same group
+  ✓ 2.3 the default boot view stays gated by PATHWAY_ENABLED (CTA + ?pathway= protected when enabled)
+  ✓ 3.1 docs.html does not hardcode the stale "1,415" test count
+  ✓ 3.2 docs.html still describes the multi-tier suite (source / bundle / min-bundle in lockstep)
+  ✓ 4.1 the Editor|Pathway tablist has >=44px touch targets in the mobile block
+  ✓ 4.2 the Editor-view "Add to pathway" button is NOT hidden by the mobile output trimming
+  ✓ 4.3 setWorkbenchMode hides the dock in the Editor view via a lens-orthogonal flag
+  ✓ 4.4 CSS: .wb-dock-editor-hidden hides the dock in the mobile block (distinct from .wb-dock-hidden)
+  ✓ 4.5 the v2.3.6 dock contract is intact: Draw still opens the lens in the Pathway view
+  ✓ E1 model: the Editor-view dock flag and the lens-sheet dock flag are orthogonal
+  → Hybrid polish + cleanup (v2.4.3): 16 passed, 0 failed
+
+Keyboard shortcuts (v2.4.4)
+  ✓ A1 the keydown dispatcher maps bond / element / Esc / select-all keys
+  ✓ A2 aromatic (4) / any (0) bond keys are intentionally NOT mapped
+  ✓ A3 the shortcut guard suppresses text-input / dialog / open-lens contexts
+  ✓ A4 the keydown handler gates on _isShortcutContext (not the bare text-input check)
+  ✓ A5 hover tracking records the atom/bond under the cursor for the shortcuts
+  ✓ A6 destroy() tears down an open cheat-sheet (no leaked capture listener)
+  ✓ A7 a "Shortcuts" toolbar action + a ? deep-link sit in the Edit group
+  ✓ B1 the cheat-sheet is an accessible modal dialog (role / aria-modal / label)
+  ✓ B2 the cheat-sheet closes on Esc and backdrop click, and traps Tab
+  ✓ B3 closing restores focus + removes the capture-phase keydown listener
+  ✓ B4 the catalogue lists bonds, atoms, edit + help (no emoji in copy)
+  ✓ C1 the workbench lens Esc still commits the structure (unchanged)
+  ✓ C2 the editor Esc defers to an open lens via the role=dialog wrap check
+  ✓ C3 the Editor|Pathway view switch + pathway-canvas keys are untouched
+  ✓ D1 bond keys 1/2/3 arm the matching bond tool
+  ✓ D2 element letter with NO target arms the atom tool with that element
+  ✓ D3 element letter with a selected atom changes it in place (undoable)
+  ✓ D4 Shift+C reaches chlorine, Shift+B reaches bromine (halogen combos win)
+  ✓ D5 Esc returns to the Select tool
+  ✓ D6 Ctrl+A selects every atom + bond and switches to Select
+  ✓ D7 Del removes the selection; with none, removes the hovered atom
+  ✓ D8 ? opens the cheat-sheet as a labelled modal dialog; Esc closes it
+  ✓ D9 a second ? while open is a no-op (idempotent)
+  ✓ D10 GUARD: a keydown whose target is a text input is NOT hijacked
+  ✓ D11 GUARD: while the editor sits in an OPEN focus lens, Esc->Select stands down
+  → Keyboard shortcuts (v2.4.4): 25 passed, 0 failed
+
+Colour-blind-safe palette + toggle (v2.4.5)
+  ✓ A1 a [data-palette="cvd"] override block exists in workbench.css
+  ✓ A2 the palette is OPT-IN — the default semantics are not redefined
+  ✓ B1 each trace state gets a CVD-safe border-color override
+  ✓ B2 the four trace-state CVD colours are pairwise DISTINCT
+  ✓ B3 the single-atom trace + moiety-source + cofactor-origin marks are re-tinted distinctly
+  ✓ C1 each pathway node TYPE gets a CVD-safe stroke override
+  ✓ C2 the node-type CVD strokes are pairwise distinct (separable under CVD)
+  ✓ C3 the quality badge good / warn / bad remap to CVD-safe values
+  ✓ D1 atom-trace border PATTERNS (solid/dashed/dotted/double) are untouched
+  ✓ D2 the node-type letter badge + the moiety status-tag chip are still styled
+  ✓ E1 the toggle button exists in the nav with an accessible label + aria-pressed
+  ✓ E2 clicking the toggle SETS data-palette="cvd" and PERSISTS it to localStorage
+  ✓ E3 clicking again toggles OFF and persists the default
+  ✓ E4 a stored "cvd" preference is READ + applied on load, before DOMContentLoaded
+  ✓ E5 the CVD palette COMPOSES with dark mode (orthogonal attributes)
+  ✓ E6 a localStorage failure on read/write does not throw (private browsing)
+  → Colour-blind-safe palette + toggle (v2.4.5): 16 passed, 0 failed
+
+Reaction group reachable in the Editor view (v2.4.6)
+  ✓ A1 MolEditor still defines a left-placed Reaction group
+  ✓ A2 the Reaction group contains the Arrow tool that draws the -> arrow
+  ✓ B1 the baseline still HIDES reaction/actions/export in the editor rail
+  ✓ C1 the Editor view RE-SHOWS the Reaction group (display:flex !important)
+  ✓ C2 the override is keyed on .wb-view-editor (so it cannot match the lens)
+  ✓ C3 the override is strictly MORE specific than the hide (so it wins in the Editor view)
+  ✓ D1 the Editor view does NOT re-show actions or export (they have other access)
+  ✓ D2 the un-hide is reaction-ONLY (exactly one .wb-view-editor reaction-group override)
+  ✓ D3 the lens contract is intact: no .wb-lens-open un-hide leaks reaction in
+  → Reaction group reachable in the Editor view (v2.4.6): 9 passed, 0 failed
+
+Publication-quality export (v2.4.7)
+  ✓ A1 background:transparent OMITS the full-canvas background rect
+  ✓ A2 transparent leaves NO opaque white fills (background rect + label halos all clear)
+  ✓ B1 publication labels use the journal Helvetica/Arial font; the default does not
+  ✓ B2 publication draws Kekule double bonds (no aromatic circles)
+  ✓ B3 publication uses heavier bonds than the screen default
+  ✓ C1 publication composes with transparent (Helvetica AND no background rect)
+  ✓ C2 an explicit caller option overrides the preset value
+  ✓ D1 the default (no-options) export is unchanged: white rect, screen font, 1.8 bonds, aromatic circle
+  ✓ E1 a PUBLICATION preset is defined with printMode + Kekule + no watermark
+  ✓ E2 toSVG and toPNG both resolve options through _resolveOpts (preset folds in)
+  ✓ E3 _buildSVGImpl omits the bg rect and neutralises label halos for transparent
+  → Publication-quality export (v2.4.7): 11 passed, 0 failed
+
+Editor view exposes display toggles + pan (v2.4.8)
+  ✓ A1 MolEditor defines the R/S, E/Z, H, Ar display toggles and the Pan Mol tool
+  ✓ B1 the baseline still HIDES all five row-2 affordances in the editor chrome
+  ✓ C1 the Editor view RE-SHOWS all five affordances (display:flex !important)
+  ✓ C2 the override is keyed on .wb-view-editor and is strictly more specific than the hide
+  ✓ D1 the Editor view does NOT re-show the actions or export rail groups
+  ✓ D2 the lens contract holds: no .wb-lens-open rule re-shows these affordances
+  → Editor view exposes display toggles + pan (v2.4.8): 6 passed, 0 failed
+
+Keyboard atom placement (v2.4.9)
+  ✓ A1 first growth on an empty canvas places one atom and makes it current
+  ✓ A2 arrow growth adds a bonded atom in the given direction
+  ✓ A3 growing back into an existing atom closes a ring (bond, no new atom)
+  ✓ A4 a letter key retypes the current atom and sets the pending element
+  ✓ A5 the bond order is honoured by growth
+  ✓ A6 delete removes the current atom and re-anchors on a neighbour
+  ✓ B1 entering build mode flips the canvas role to application; exiting reverts to img
+  ✓ C1 the canvas defaults to role=img (the v2.3.7 honest-graphic contract is kept)
+  ✓ C2 the keydown handler routes build keys ONLY when the canvas is focused and no Ctrl/Cmd
+  ✓ C3 a polite aria-live region is created for the announcements
+  ✓ C4 every keyboard mutation goes through saveHistory (so Ctrl+Z undoes it)
+  → Keyboard atom placement (v2.4.9): 11 passed, 0 failed
+
+True dark drawing canvas (v2.4.10)
+  ✓ A1 the drawing svg inks via currentColor and takes its colour from --mol-ink
+  ✓ A2 bonds, the _line/_text defaults and the reaction arrow default to currentColor
+  ✓ A3 near-black atom labels route through currentColor; CPK heteroatoms keep their hue
+  ✓ B1 light pins --mol-ink to #333 on the drawing svg
+  ✓ B2 dark sets --color-bg dark + --mol-ink light on the drawing svg
+  ✓ B3 neither dark path (explicit toggle OR OS prefers-dark) light-sheets the editor drawing svg
+  → True dark drawing canvas (v2.4.10): 6 passed, 0 failed
+
+CIP cyclitol calibrated abstention (v2.4.12)
+  ✓ A:galactitol (meso) multiset = R,R,S,S (2R,3S,4R,5S) (PubChem)
+  ✓ A:allitol (meso) multiset = R,R,S,S (2R,3R,4S,5S) (PubChem)
+  ✓ A:D-mannitol multiset = R,R,R,R (2R,3R,4R,5R) (PubChem)
+  ✓ A:D-glucitol multiset = R,R,R,S (2R,3R,4R,5S) (PubChem)
+  ✓ A5 the meso hexitols are MIXED R/S, never all-same (a meso compound cannot be all-R/all-S)
+  ✓ B1 ribitol stays R,S,r and ribaric acid stays R,S,s with zero abstention
+  ✓ C:myo-inositol abstains on all 6 ring centres (no fabricated R/S, all flagged)
+  ✓ C:scyllo-inositol abstains on all 6 ring centres (no fabricated R/S, all flagged)
+  ✓ C:cis-inositol abstains on all 6 ring centres (no fabricated R/S, all flagged)
+  ✓ C-order myo-inositol abstention is identical across two equivalent SMILES
+  ✓ D1 resolved stereocentres and plain non-stereocentres are never flagged
+  ✓ D2 inositol carries the flag ONLY on its specified ring carbons, not its O/H
+  ✓ E1 the abstention path sets the honest cipUndetermined flag
+  ✓ E2 the calibrated-abstention contract + cyclitol ground truth are documented
+  → CIP cyclitol calibrated abstention (v2.4.12): 14 passed, 0 failed
+
+Reaction-map SVG export (v2.4.13)
+  ✓ A1 colour-mol trace halos are painted (pale soft circles behind atoms)
+  ✓ A2 atom-atom map numbers are drawn, and a reactant + its product partner share one
+  ✓ A3 bond changes recolour the changed bonds (cleaved + formed)
+  ✓ A4 the reaction is laid out as a scheme (arrow present, components separated)
+  ✓ A5 publication quality by default: Helvetica labels + white background
+  ✓ B1 NO confidence caption is drawn in the figure
+  ✓ C1 a plain single-molecule toSVG is overlay-free (no halos / BC / no regression)
+  ✓ C2 caller can opt into a transparent figure and the reaction-centre rings
+  ✓ D1 ImageExport exposes toReactionMapSVG + the overlay palettes
+  ✓ D2 the CLI wires `aam --format svg` through toReactionMapSVG
+  → Reaction-map SVG export (v2.4.13): 10 passed, 0 failed
+
+Compound labels (v2.4.14)
+  ✓ A1 findBySmiles resolves a known metabolite (and a re-written form of it)
+  ✓ A2 findBySmiles resolves glucose-6-phosphate (the @/@@-drift regression)
+  ✓ A3 an epimer is NOT mislabelled, and a non-metabolite returns null
+  ✓ B1 both known components are captioned with their names
+  ✓ B2 showIds captions with the KEGG id instead of the name
+  ✓ B3 labels:false suppresses all captions
+  ✓ B4 an unknown component is left uncaptioned while a known one is labelled
+  ✓ C1 MetaboliteLibrary exports findBySmiles with the drift-robust key
+  ✓ C2 toReactionMapSVG builds componentLabels and _buildSVGImpl renders them
+  → Compound labels (v2.4.14): 9 passed, 0 failed
+
+E/Z structure key (v2.4.16)
+  ✓ A1 E/Z is read correctly from the directional bonds (no layout needed)
+  ✓ A2 an unspecified double bond yields no descriptor (no guessing)
+  ✓ A3 the descriptor is order-invariant across equivalent writings
+  ✓ B1 cis-maleate is NO LONGER mislabelled as trans-Fumarate
+  ✓ B2 genuine (E)-fumarate still resolves (incl. its @/@@-style drift form)
+  ✓ B3 the Fumarate library entry carries its real (E) configuration
+  ✓ C1 every library metabolite still resolves to itself
+  ✓ C2 achiral + chiral metabolites without C=C stereo are unaffected
+  ✓ D1 CIPStereo exports the geometry-free ezDescriptors
+  ✓ D2 findBySmiles folds the E/Z multiset into the structure key
+  → E/Z structure key (v2.4.16): 10 passed, 0 failed
+
+Metabolite golden structures (v2.4.17)
+  ✓ Glucose 6-phosphate has the authoritative formula + CIP (C00668 / CID 5958)
+  ✓ 1,3-Bisphosphoglycerate has the authoritative formula + CIP (C00236 / CID 683)
+  ✓ 3-Phosphoglycerate has the authoritative formula + CIP (C00197 / CID 724)
+  ✓ D-Ribulose 5-phosphate has the authoritative formula + CIP (C00199 / CID 439184)
+  ✓ D-Ribose 5-phosphate has the authoritative formula + CIP (C00117 / CID 77982)
+  ✓ D-Xylulose 5-phosphate has the authoritative formula + CIP (C00231 / CID 5459919)
+  ✓ the previously-shipped WRONG structures are not present
+  ✓ D-Glucose anchor still reads (2R,3S,4R,5R) ring multiset
+  → Metabolite golden structures (v2.4.17): 8 passed, 0 failed
+
+Common-molecules golden (v2.4.17)
+  ✓ Theophylline has the correct formula + absolute configuration
+  ✓ Guanine has the correct formula + absolute configuration
+  ✓ Guanine (Kekule) has the correct formula + absolute configuration
+  ✓ Allopurinol has the correct formula + absolute configuration
+  ✓ Etodolac has the correct formula + absolute configuration
+  ✓ Sitagliptin has the correct formula + absolute configuration
+  ✓ Sitagliptin is the (R) eutomer, not the (S) distomer
+  ✓ Theophylline is 1,3-dimethyl (imidazole N-H), NOT paraxanthine (1,7-dimethyl)
+  → Common-molecules golden (v2.4.17): 8 passed, 0 failed
+
+Writer stereo preservation (v2.4.17)
+  ✓ A previously-inverting molecules now preserve their CIP configuration
+  ✓ B control chiral molecules stay correct (no new inversions)
+  ✓ C the explicit naproxen/limonene enantiomer identity is exact
+  ✓ D reaction components keep their configuration (RDT.extractComponents re-normalises)
+  → Writer stereo preservation (v2.4.17): 4 passed, 0 failed
+
+Writer aromatic conservation (v2.4.17)
+  ✓ A previously-saturated aromatics keep their formula on parse->write->parse
+  ✓ B benzenoids + standard heterocycles remain conserved (no regression)
+  ✓ C azulene is not saturated to C10H18
+  ✓ D Kekulé-input aromatic N-H rings keep the NH (indole/serotonin -> [nH])
+  ✓ E the previously-malformed library purines parse to the correct formula
+  → Writer aromatic conservation (v2.4.17): 5 passed, 0 failed
+
+cis/trans depiction (v2.4.17)
+  ✓ A cis (Z) double bonds are drawn cis, trans (E) drawn trans
+  ✓ B maleate and fumarate are drawn DIFFERENTLY (the headline bug)
+  ✓ C an unspecified double bond still lays out (no marker => no forced flip)
+  → cis/trans depiction (v2.4.17): 3 passed, 0 failed
+
+publication Kekulé export (v2.4.17)
+  ✓ A publication export draws Kekulé double bonds (no bare aromatic ring)
+  ✓ B benzene: publication (Kekulé) has more lines than a bare hexagon would
+  ✓ C pyrrole gets exactly 2 ring double bonds (N is a lone-pair donor, not =N)
+  ✓ D default export still uses the aromatic circle (unchanged)
+  → publication Kekulé export (v2.4.17): 4 passed, 0 failed
+
+AAM orientation independence (v2.4.17)
+  ✓ A ethanol oxidation is an order change in ALL four SMILES orientations
+  ✓ B the mapping is budget-independent (same result at 1ms and 60000ms)
+  ✓ C a genuine bond FORMATION is still detected (Claisen keeps its strict map)
+  ✓ D a genuine bond CLEAVAGE is still detected (ring opening)
+  → AAM orientation independence (v2.4.17): 4 passed, 0 failed
+
+Library valence sanity (v3.0.0)
+  ✓ every common-molecules entry parses to a chemically possible structure
+  → Library valence sanity (v3.0.0): 1 passed, 0 failed
+
+Stereo golden (v3.0.1)
+  ✓ Digoxin has the authoritative stereochemistry (formula + CIP + E/Z)
+  ✓ Beclomethasone has the authoritative stereochemistry (formula + CIP + E/Z)
+  ✓ Doxycycline has the authoritative stereochemistry (formula + CIP + E/Z)
+  ✓ Prednisolone has the authoritative stereochemistry (formula + CIP + E/Z)
+  ✓ Dexamethasone has the authoritative stereochemistry (formula + CIP + E/Z)
+  ✓ Triamcinolone has the authoritative stereochemistry (formula + CIP + E/Z)
+  ✓ Ethinyl Estradiol has the authoritative stereochemistry (formula + CIP + E/Z)
+  ✓ Vitamin A (Retinol) has the authoritative stereochemistry (formula + CIP + E/Z)
+  → Stereo golden (v3.0.1): 8 passed, 0 failed
+
+Browser export stamp (v3.0.3)
+  ✓ A1 stampExportSvg is defined and delegates to ExportStamp.stampSvg
+  ✓ A2 the publication-SVG download stamps before ImageExport.downloadSVG
+  ✓ A3 ImageExport is NOT modified to stamp (CLI + preview stay unstamped)
+  ✓ B1 raw ImageExport SVG carries no bime provenance stamp
+  ✓ B2 ExportStamp.stampSvg adds the provenance stamp (version metadata)
+  ✓ B3 the stamp is idempotent (re-export never double-stamps)
+  → Browser export stamp (v3.0.3): 6 passed, 0 failed
+
+Reaction-map legibility (v3.1.0)
+  ✓ H1 atom pixel transform matches drawn element labels (harness sanity)
+  ✓ H2 overlap primitives behave (box/box, segment/box) and the parser reads bond coordinates
+  ✓ H3 contrast oracle matches WCAG reference values
+  ✓ H4 every pilot renders, maps, and draws map numbers
+  ✓ P1 toSVG / toPublicationSVG / toPrintSVG are byte-identical to 3.0.3
+  ✓ L1 parseColor reads #rgb, #rrggbb and rgb()
+  ✓ L2 luminance / contrast match WCAG reference values
+  ✓ L3 composite blends a halo at its opacity over the canvas
+  ✓ L4 remedyColour keeps hue + saturation and meets the threshold
+  ✓ L5 remedyColour returns the input when it already passes, null when unreachable
+  ✓ L6 remedyColour is deterministic and only moves as far as needed
+  ✓ US1-a every atom text item meets 3:1 on every pilot (SC-001)
+  ✓ US1-b no unconditional knockout rects; any patch hides a genuinely failing colour (SC-004)
+  ✓ US1-c an O / N label on a pale halo gets neither box nor recolour (esterification)
+  ✓ US1-d a failing label is recoloured within its own hue (minContrast 6)
+  ✓ US1-e unreachable contrast falls back to a tight rounded patch (minContrast 21)
+  ✓ US1-f transparent background is judged against white and stays legible
+  ✓ US1-g the screen palette also meets 3:1 (publication:false)
+  ✓ US1-h bonds stop short of their own atom label (FR-006)
+  ✓ US2-0 placement primitives agree with the independent harness (boxOverlap, segInBox)
+    GDA1_HPRNStlr: map/map 0 (all 7), map/label 0 (all 3); 3.0.3 uncrowded 0/21; crowded map atoms 89/222
+    GGH_10FTHF7GLUl: map/map 0 (all 0), map/label 0 (all 0); 3.0.3 uncrowded 0/10; crowded map atoms 44/178
+    CE2872DIOer: map/map 0 (all 1), map/label 0 (all 0); 3.0.3 uncrowded 0/16; crowded map atoms 36/140
+  ✓ US2-a zero map/map and map/label overlaps for uncrowded atoms (SC-002)
+    GDA1_HPRNStlr: map/bond 4 (all 59); 3.0.3 uncrowded 62 (all 193), cap 15
+    GGH_10FTHF7GLUl: map/bond 0 (all 0); 3.0.3 uncrowded 50 (all 101), cap 12
+    CE2872DIOer: map/bond 5 (all 22); 3.0.3 uncrowded 44 (all 132), cap 11
+  ✓ US2-b uncrowded map/bond overlaps fall by at least 75% vs 3.0.3 (SC-003)
+  ✓ US2-c every uncrowded map number sits nearer its own atom than any other atom (FR-010)
+  ✓ US2-d map-number font never drops below 75% of standard (FR-010)
+  ✓ US2-e the same reaction renders byte-identically twice (SC-005, FR-009)
+  ✓ US2-f esterification: no map number collides, none sits on its own bonds
+  ✓ US2-g showMapNumbers:false draws no map numbers (FR-011)
+  ✓ US3-a explicit H is removed into its neighbour (bracket count +1, auto stays auto)
+  ✓ US3-b isotopic, charged, H-only and non-terminal hydrogens are kept (FR-013)
+  ✓ US3-c stereocentre configuration survives stripping at every neighbour position (FR-014)
+  ✓ US3-d surviving atom/bond ids are unchanged and the return value counts removals
+  ✓ US3-e hand pre-stripped fixture is the same chemistry (oracle check)
+  ✓ US3-f `aam --heavy-atoms` maps exactly the heavy atoms (json + text, FR-012/013)
+  ✓ US3-g `aam --heavy-atoms --format svg` draws the hand-stripped figure (SC-007)
+  ✓ US3-h `--heavy-atoms --keep-mapping` uses the curated map numbers minus H
+  → Reaction-map legibility (v3.1.0): 35 passed, 0 failed
+
+Golden reactions AAM corpus (target: 400, current: 138)
+  ✓ hyd-001 [ester-hydrolysis] — Methyl acetate hydrolysis
+  ✓ hyd-002 [ester-hydrolysis] — Ethyl acetate hydrolysis
+  ✓ hyd-003 [amide-hydrolysis] — N-methylacetamide hydrolysis
+  ✓ hyd-004 [amide-hydrolysis] — Acetanilide hydrolysis
+  ✓ hyd-005 [peptide-hydrolysis] — Glycylalanine hydrolysis
+  ✓ est-001 [esterification] — Fischer esterification (acetic acid + methanol)
+  ✓ est-002 [esterification] — Steglich esterification (DCC-mediated)
+  ✓ est-003 [transesterification] — Methyl to ethyl transesterification
+  ✓ sub-001 [sn2] — Hydroxide + methyl bromide
+  ✓ sub-002 [sn2] — Cyanide + ethyl bromide
+  ✓ sub-003 [sn2] — Ammonia + methyl iodide
+  ✓ sub-004 [williamson-ether] — Williamson ether synthesis (methoxide + ethyl bromide)
+  ✓ add-001 [electrophilic-addition] — HBr to propene (Markovnikov)
+  ✓ add-002 [electrophilic-addition] — Bromine addition to ethene
+  ✓ add-003 [hydration] — Acid-catalysed hydration of ethene
+  ✓ elim-001 [e2] — E2 dehydrobromination
+  ✓ elim-002 [dehydration] — Acid-catalysed dehydration of ethanol
+  ✓ redox-001 [oxidation] — Ethanol to acetaldehyde
+  ✓ redox-002 [oxidation] — Ethanol to acetic acid
+  ✓ redox-003 [oxidation] — Acetaldehyde to acetic acid
+  ✓ redox-004 [reduction] — Acetaldehyde to ethanol (NaBH4)
+  ✓ redox-005 [reduction] — Acetone to isopropanol
+  ✓ ar-001 [ar-substitution] — Bromination of benzene
+  ✓ ar-002 [ar-substitution] — Nitration of benzene
+  ✓ ar-003 [friedel-crafts-acylation] — Friedel-Crafts acylation of benzene with acetyl chloride
+  ✓ ar-004 [friedel-crafts-alkylation] — Friedel-Crafts alkylation of benzene with methyl chloride
+  ✓ couple-001 [suzuki-coupling] — Suzuki-Miyaura (boronic ester + iodobenzene, balanced via HX)
+  ✓ couple-002 [heck-coupling] — Heck reaction (styrene + bromobenzene)
+  ✓ diels-001 [diels-alder] — Diels-Alder (butadiene + ethylene)
+  ✓ rearr-001 [rearrangement] — Beckmann rearrangement (cyclohexanone oxime to caprolactam)
+  ✓ enz-001 [enzymatic-hydrolysis] — Acetylcholinesterase hydrolysis of acetylcholine
+  ✓ enz-002 [enzymatic-phosphorylation] — Hexokinase: glucose + ATP -> glucose-6-phosphate + ADP
+  ✓ enz-003 [enzymatic-glycosyl-transfer] — Sucrose hydrolysis (sucrase / invertase)
+  ✓ iso-001 [identity] — Ethanol identity (no change)
+  ✓ iso-002 [identity] — Benzene identity
+  ✓ iso-003 [isomerization] — Propane to propene (dehydrogenation)
+  ✓ neg-001 [unbalanced-loss] — CCO -> CC (lost oxygen, deliberately unbalanced)
+  ✓ neg-002 [unbalanced-loss] — CCBr.O -> CCO (lost Br, deliberately unbalanced)
+  ✓ neg-003 [unbalanced-gain] — C -> CC (deliberately unbalanced gain)
+  ✓ salt-001 [salt-disconnect] — NaOH + HCl -> NaCl + H2O
+  ✓ salt-002 [salt-disconnect] — Sodium hydroxide + methyl chloride -> methanol + NaCl
+  ✓ ring-001 [ring-opening] — Epoxide ring opening by water
+  ✓ ring-002 [ring-opening] — Cyclopropane to propene (thermal)
+  ✓ ring-003 [ring-formation] — Intramolecular aldol (5-exo-trig)
+  ✓ stereo-001 [sn2-inversion] — (R)-Bromobutane + hydroxide -> (S)-butanol
+  ✓ stereo-002 [diastereomer] — Glucose to mannose epimerisation
+  ✓ aldol-001 [aldol-addition] — Acetone self-aldol (acid-catalysed)
+  ✓ aldol-002 [aldol-condensation] — Mixed aldol of acetone + benzaldehyde to benzalacetone
+  ✓ claisen-001 [claisen-condensation] — Claisen condensation of ethyl acetate
+  ✓ michael-001 [michael-addition] — Michael addition of malonate to methyl vinyl ketone
+  ✓ mannich-001 [mannich-reaction] — Mannich (acetone + formaldehyde + dimethylamine)
+  ✓ cannizzaro-001 [cannizzaro-reaction] — Cannizzaro disproportionation of benzaldehyde
+  ✓ wittig-001 [wittig-reaction] — Wittig (methylenetriphenylphosphorane + benzaldehyde)
+  ✓ hwe-001 [horner-wadsworth-emmons] — HWE (triethyl phosphonoacetate + benzaldehyde)
+  ✓ grignard-001 [grignard-addition] — Methylmagnesium bromide + acetaldehyde -> isopropanol
+  ✓ redam-001 [reductive-amination] — Reductive amination of acetone with methylamine (after NaBH4)
+  ✓ mitsunobu-001 [mitsunobu-reaction] — Mitsunobu inversion (alcohol + carboxylic acid via DEAD/PPh3)
+  ✓ buch-001 [buchwald-hartwig] — Buchwald-Hartwig (aniline + bromobenzene + base)
+  ✓ bv-001 [baeyer-villiger] — Baeyer-Villiger (cyclohexanone + peracid -> caprolactone)
+  ✓ swern-001 [swern-oxidation] — Swern oxidation (1-propanol -> propanal)
+  ✓ swern-002 [swern-oxidation] — Benzyl alcohol -> benzaldehyde
+  ✓ rearr-002 [claisen-rearrangement] — Claisen [3,3]-sigmatropic (allyl vinyl ether)
+  ✓ rearr-003 [pinacol] — Pinacol rearrangement (pinacol -> pinacolone)
+  ✓ rearr-004 [curtius] — Curtius rearrangement (acyl azide -> isocyanate)
+  ✓ pg-001 [protecting-group-install] — Boc protection of amine (amine + Boc2O)
+  ✓ pg-002 [protecting-group-remove] — Boc removal (TFA / acid)
+  ✓ pg-003 [acetal-formation] — Acetal formation (cyclohexanone + ethylene glycol)
+  ✓ enz-004 [enzymatic-peptide-bond] — Ribosomal peptide bond formation (Gly-tRNA + Ala-tRNA stub)
+  ✓ enz-005 [enzymatic-methyl-transfer] — Methyltransferase (sulfonium methyl transfer to catechol)
+  ✓ enz-006 [enzymatic-decarboxylation] — Pyruvate decarboxylase (pyruvate -> acetaldehyde + CO2)
+  ✓ enz-007 [enzymatic-aldolase] — Aldolase (fructose 1,6-bisphosphate -> DHAP + GAP)
+  ✓ enz-008 [enzymatic-transamination] — Alanine aminotransferase (alanine + alpha-ketoglutarate -> pyruvate + glutamate)
+  ✓ redox-006 [carbonyl-reduction] — Cyclohexanone -> cyclohexanol (NaBH4)
+  ✓ redox-007 [alkene-oxidation] — Ozonolysis (1-hexene -> pentanal + formaldehyde, reductive workup)
+  ✓ redox-008 [alkene-dihydroxylation] — OsO4 dihydroxylation (ethylene -> ethylene glycol)
+  ✓ hyd-006 [nitrile-hydrolysis] — Acetonitrile hydrolysis to acetamide
+  ✓ hyd-007 [imine-hydrolysis] — Imine hydrolysis (N-methyl benzylideneimine + water)
+  ✓ sub-005 [sn1] — tert-Butyl bromide solvolysis in water
+  ✓ sub-006 [finkelstein] — Finkelstein (ethyl chloride + sodium iodide)
+  ✓ stereo-003 [alkene-isomerisation] — cis-2-butene -> trans-2-butene (photochemical)
+  ✓ stereo-004 [stereo-retention] — Esterification of (S)-lactic acid (retention)
+  ✓ rad-001 [radical-halogenation] — Methane free-radical chlorination
+  ✓ rad-002 [radical-addition] — Anti-Markovnikov HBr addition (peroxide effect)
+  ✓ cope-001 [cope-rearrangement] — Cope [3,3]-sigmatropic of 1,5-hexadiene
+  ✓ ene-001 [ene-reaction] — Carbonyl-ene (propene + formaldehyde)
+  ✓ dipolar-001 [1-3-dipolar-cycloaddition] — Azide-alkyne Huisgen cycloaddition (CuAAC click)
+  ✓ sandmeyer-001 [sandmeyer] — Sandmeyer (benzenediazonium + CuBr -> bromobenzene)
+  ✓ wolff-001 [wolff-kishner] — Wolff-Kishner reduction (acetophenone -> ethylbenzene)
+  ✓ clemmensen-001 [clemmensen] — Clemmensen reduction (cyclohexanone -> cyclohexane)
+  ✓ hofmann-001 [hofmann-elimination] — Hofmann elimination (quaternary ammonium -> alkene)
+  ✓ gabriel-001 [gabriel-synthesis] — Gabriel synthesis (phthalimide K + ethyl bromide)
+  ✓ strecker-001 [strecker-synthesis] — Strecker amino-acid synthesis (acetaldehyde + NH3 + HCN)
+  ✓ knoev-001 [knoevenagel] — Knoevenagel condensation (benzaldehyde + malononitrile)
+  ✓ dieckmann-001 [dieckmann] — Dieckmann condensation (diethyl adipate -> cyclic beta-ketoester)
+  ✓ robinson-001 [robinson-annulation] — Robinson annulation (cyclohexanone + MVK, net)
+  ✓ amide-001 [amide-formation] — Amide coupling (acetic acid + methylamine)
+  ✓ sulfon-001 [sulfonamide-formation] — Sulfonamide formation (methanesulfonyl chloride + methylamine)
+  ✓ urea-001 [urea-formation] — Urea formation (methyl isocyanate + methylamine)
+  ✓ carbamate-001 [carbamate-formation] — Carbamate formation (methyl chloroformate + methylamine)
+  ✓ enz-009 [enzymatic-dehydrogenase] — Lactate dehydrogenase (lactate -> pyruvate, NAD+)
+  ✓ enz-010 [enzymatic-isomerase] — Triose phosphate isomerase (DHAP -> GAP)
+  ✓ enz-011 [enzymatic-kinase] — Phosphoglycerate kinase model (carboxyl + phosphate transfer)
+  ✓ enz-012 [enzymatic-lipase] — Lipase triglyceride hydrolysis (model monoester -> acid + glycerol stub)
+  ✓ enz-013 [enzymatic-hydratase] — Fumarase (fumarate + water -> malate)
+  ✓ enz-014 [enzymatic-decarboxylation] — Ornithine decarboxylase (ornithine -> putrescine + CO2)
+  ✓ enz-015 [enzymatic-acetyl-transfer] — Acetyl-CoA model: acetyl transfer to choline (acetylcholine synthesis)
+  ✓ halo-001 [haloform] — Haloform reaction (methyl ketone -> carboxylate + haloform)
+  ✓ dec-001 [decarboxylation] — Malonic acid thermal decarboxylation
+  ✓ hyd-008 [acetal-hydrolysis] — Acetal hydrolysis (dimethoxymethane -> formaldehyde + methanol)
+  ✓ couple-003 [sonogashira] — Sonogashira (phenylacetylene + iodobenzene)
+  ✓ couple-004 [negishi] — Negishi (phenylzinc + bromobenzene -> biphenyl)
+  ✓ couple-005 [stille] — Stille (vinyltributyltin model + bromobenzene)
+  ✓ olef-001 [mcmurry] — McMurry coupling (two acetone -> tetramethylethylene)
+  ✓ olef-002 [peterson-olefination] — Peterson olefination (beta-hydroxysilane model -> alkene)
+  ✓ ox-001 [epoxidation] — Prilezhaev epoxidation (propene + peracid -> propylene oxide)
+  ✓ ox-002 [wacker-oxidation] — Wacker oxidation (ethylene -> acetaldehyde)
+  ✓ ox-003 [rubottom-oxidation] — Rubottom (silyl enol ether -> alpha-hydroxy ketone, model)
+  ✓ red-001 [rosenmund] — Rosenmund reduction (acyl chloride -> aldehyde)
+  ✓ red-002 [nitro-reduction] — Nitrobenzene reduction to aniline
+  ✓ red-003 [imine-reduction] — Imine reduction to amine (N-methylbenzylimine -> N-methylbenzylamine)
+  ✓ name-001 [wittig-horner] — Aza-Wittig (iminophosphorane + aldehyde -> imine)
+  ✓ name-002 [fischer-indole] — Fischer indole synthesis (phenylhydrazone -> indole, net)
+  ✓ name-003 [paal-knorr] — Paal-Knorr furan synthesis (1,4-diketone -> furan)
+  ✓ name-004 [biginelli] — Biginelli (aldehyde + urea + beta-ketoester, condensation core)
+  ✓ enz-016 [enzymatic-enolase] — Enolase (2-phosphoglycerate -> phosphoenolpyruvate + water)
+  ✓ enz-017 [enzymatic-thiolase] — Thiolase (acetoacetyl-CoA model retro-Claisen)
+  ✓ enz-018 [enzymatic-carboxylase] — Pyruvate carboxylase (pyruvate + CO2 -> oxaloacetate)
+  ✓ enz-019 [enzymatic-deaminase] — Adenosine deaminase (adenine -> hypoxanthine, base model)
+  ✓ enz-020 [enzymatic-synthase] — Citrate synthase (oxaloacetate + acetyl-CoA model -> citrate)
+  ✓ click-001 [thiol-ene] — Thiol-ene click (methanethiol + propene, anti-Markovnikov)
+  ✓ click-002 [staudinger-ligation] — Staudinger reduction (azide + water -> amine + N2, model)
+  ✓ elim-003 [cope-elimination] — Cope elimination (amine oxide -> alkene + hydroxylamine)
+  ✓ elim-004 [chugaev-elimination] — Chugaev elimination (xanthate -> alkene, net)
+  ✓ rearr-005 [hofmann-rearrangement] — Hofmann rearrangement (amide -> amine, net loss of CO2)
+  ✓ rearr-006 [schmidt-rearrangement] — Schmidt reaction (ketone + HN3 -> amide)
+  ✓ rearr-007 [favorskii] — Favorskii rearrangement (alpha-halo ketone -> ester, net)
+  ✓ ar-005 [ar-sulfonation] — Benzene sulfonation (benzenesulfonic acid)
+  ✓ ar-006 [diazonium-coupling] — Azo coupling (benzenediazonium + phenol -> azo dye)
+
+  Per-class pass-rate:
+    ✓ [100%] 1-3-dipolar-cycloaddition (1/1)
+    ✓ [100%] acetal-formation (1/1)
+    ✓ [100%] acetal-hydrolysis (1/1)
+    ✓ [100%] aldol-addition (1/1)
+    ✓ [100%] aldol-condensation (1/1)
+    ✓ [100%] alkene-dihydroxylation (1/1)
+    ✓ [100%] alkene-isomerisation (1/1)
+    ✓ [100%] alkene-oxidation (1/1)
+    ✓ [100%] amide-formation (1/1)
+    ✓ [100%] amide-hydrolysis (2/2)
+    ✓ [100%] ar-substitution (2/2)
+    ✓ [100%] ar-sulfonation (1/1)
+    ✓ [100%] baeyer-villiger (1/1)
+    ✓ [100%] biginelli (1/1)
+    ✓ [100%] buchwald-hartwig (1/1)
+    ✓ [100%] cannizzaro-reaction (1/1)
+    ✓ [100%] carbamate-formation (1/1)
+    ✓ [100%] carbonyl-reduction (1/1)
+    ✓ [100%] chugaev-elimination (1/1)
+    ✓ [100%] claisen-condensation (1/1)
+    ✓ [100%] claisen-rearrangement (1/1)
+    ✓ [100%] clemmensen (1/1)
+    ✓ [100%] cope-elimination (1/1)
+    ✓ [100%] cope-rearrangement (1/1)
+    ✓ [100%] curtius (1/1)
+    ✓ [100%] decarboxylation (1/1)
+    ✓ [100%] dehydration (1/1)
+    ✓ [100%] diastereomer (1/1)
+    ✓ [100%] diazonium-coupling (1/1)
+    ✓ [100%] dieckmann (1/1)
+    ✓ [100%] diels-alder (1/1)
+    ✓ [100%] e2 (1/1)
+    ✓ [100%] electrophilic-addition (2/2)
+    ✓ [100%] ene-reaction (1/1)
+    ✓ [100%] enzymatic-acetyl-transfer (1/1)
+    ✓ [100%] enzymatic-aldolase (1/1)
+    ✓ [100%] enzymatic-carboxylase (1/1)
+    ✓ [100%] enzymatic-deaminase (1/1)
+    ✓ [100%] enzymatic-decarboxylation (2/2)
+    ✓ [100%] enzymatic-dehydrogenase (1/1)
+    ✓ [100%] enzymatic-enolase (1/1)
+    ✓ [100%] enzymatic-glycosyl-transfer (1/1)
+    ✓ [100%] enzymatic-hydratase (1/1)
+    ✓ [100%] enzymatic-hydrolysis (1/1)
+    ✓ [100%] enzymatic-isomerase (1/1)
+    ✓ [100%] enzymatic-kinase (1/1)
+    ✓ [100%] enzymatic-lipase (1/1)
+    ✓ [100%] enzymatic-methyl-transfer (1/1)
+    ✓ [100%] enzymatic-peptide-bond (1/1)
+    ✓ [100%] enzymatic-phosphorylation (1/1)
+    ✓ [100%] enzymatic-synthase (1/1)
+    ✓ [100%] enzymatic-thiolase (1/1)
+    ✓ [100%] enzymatic-transamination (1/1)
+    ✓ [100%] epoxidation (1/1)
+    ✓ [100%] ester-hydrolysis (2/2)
+    ✓ [100%] esterification (2/2)
+    ✓ [100%] favorskii (1/1)
+    ✓ [100%] finkelstein (1/1)
+    ✓ [100%] fischer-indole (1/1)
+    ✓ [100%] friedel-crafts-acylation (1/1)
+    ✓ [100%] friedel-crafts-alkylation (1/1)
+    ✓ [100%] gabriel-synthesis (1/1)
+    ✓ [100%] grignard-addition (1/1)
+    ✓ [100%] haloform (1/1)
+    ✓ [100%] heck-coupling (1/1)
+    ✓ [100%] hofmann-elimination (1/1)
+    ✓ [100%] hofmann-rearrangement (1/1)
+    ✓ [100%] horner-wadsworth-emmons (1/1)
+    ✓ [100%] hydration (1/1)
+    ✓ [100%] identity (2/2)
+    ✓ [100%] imine-hydrolysis (1/1)
+    ✓ [100%] imine-reduction (1/1)
+    ✓ [100%] isomerization (1/1)
+    ✓ [100%] knoevenagel (1/1)
+    ✓ [100%] mannich-reaction (1/1)
+    ✓ [100%] mcmurry (1/1)
+    ✓ [100%] michael-addition (1/1)
+    ✓ [100%] mitsunobu-reaction (1/1)
+    ✓ [100%] negishi (1/1)
+    ✓ [100%] nitrile-hydrolysis (1/1)
+    ✓ [100%] nitro-reduction (1/1)
+    ✓ [100%] oxidation (3/3)
+    ✓ [100%] paal-knorr (1/1)
+    ✓ [100%] peptide-hydrolysis (1/1)
+    ✓ [100%] peterson-olefination (1/1)
+    ✓ [100%] pinacol (1/1)
+    ✓ [100%] protecting-group-install (1/1)
+    ✓ [100%] protecting-group-remove (1/1)
+    ✓ [100%] radical-addition (1/1)
+    ✓ [100%] radical-halogenation (1/1)
+    ✓ [100%] rearrangement (1/1)
+    ✓ [100%] reduction (2/2)
+    ✓ [100%] reductive-amination (1/1)
+    ✓ [100%] ring-formation (1/1)
+    ✓ [100%] ring-opening (2/2)
+    ✓ [100%] robinson-annulation (1/1)
+    ✓ [100%] rosenmund (1/1)
+    ✓ [100%] rubottom-oxidation (1/1)
+    ✓ [100%] salt-disconnect (2/2)
+    ✓ [100%] sandmeyer (1/1)
+    ✓ [100%] schmidt-rearrangement (1/1)
+    ✓ [100%] sn1 (1/1)
+    ✓ [100%] sn2 (3/3)
+    ✓ [100%] sn2-inversion (1/1)
+    ✓ [100%] sonogashira (1/1)
+    ✓ [100%] staudinger-ligation (1/1)
+    ✓ [100%] stereo-retention (1/1)
+    ✓ [100%] stille (1/1)
+    ✓ [100%] strecker-synthesis (1/1)
+    ✓ [100%] sulfonamide-formation (1/1)
+    ✓ [100%] suzuki-coupling (1/1)
+    ✓ [100%] swern-oxidation (2/2)
+    ✓ [100%] thiol-ene (1/1)
+    ✓ [100%] transesterification (1/1)
+    ✓ [100%] unbalanced-gain (1/1)
+    ✓ [100%] unbalanced-loss (2/2)
+    ✓ [100%] urea-formation (1/1)
+    ✓ [100%] wacker-oxidation (1/1)
+    ✓ [100%] williamson-ether (1/1)
+    ✓ [100%] wittig-horner (1/1)
+    ✓ [100%] wittig-reaction (1/1)
+    ✓ [100%] wolff-kishner (1/1)
+
+  Overall: 138/138 (100.0%)
+  ✓ per-class pass-rate summary
+  → Golden reactions AAM corpus: 139 passed, 0 failed
+
+CIP ring stereocentre correctness
+  ✓ R1 trans-(1R,2R)-cyclohexane-1,2-diol -> RR
+  ✓ R2 trans-(1S,2S)-cyclohexane-1,2-diol -> SS
+  ✓ R3 cis-cyclohexane-1,2-diol (meso) -> RS
+  ✓ R4 (-)-menthol (1R,2S,5R) -> RRS
+  ✓ R5 cis-2-methylcyclohexan-1-ol -> RS
+  ✓ R6 trans-2-methylcyclohexan-1-ol -> RR
+  ✓ R7 alpha-D-glucopyranose -> RRSSS
+  ✓ R8 (R)-3-methylcyclohexan-1-one -> R
+  ✓ R9 (S)-3-methylcyclohexan-1-one -> S
+  ✓ R10 trans-2-decalol (fused ring) -> RSS
+  ✓ R11 adjacent 1,2-ring centres both resolve (no spurious abstention)
+  ✓ R12 acyclic anchors unchanged (L-alanine S, D-glyceraldehyde R)
+  → CIP ring stereocentre correctness: 12 passed, 0 failed
+
+  ✓ canonical editor manifest has no duplicates and every file exists
+  ✓ source pages are owned by the canonical editor manifest
+  ✓ public release surfaces point to the public distribution repository
+  ✓ SVG export escapes metadata and rejects unsafe background paint
+  ✓ SDF metadata strips record delimiters and normalises field newlines
+  ✓ live renderer honours depiction-only wedge and dash stereo
+  ✓ local molecular file import rejects oversized and unsupported files
+  ✓ adamantane template has the canonical 10-atom 12-bond cage graph
+  ✓ stored scaffold templates pass hard geometry checks and SVG rendering
+  ✓ public scaffold template list hides exact duplicate aliases
+  ✓ workbench setSafeSvg sanitizes root and child SVG markup
+  ✓ workbench compound lookup and reaction labels are guarded
+  ✓ workbench keeps scripts external and actions declarative
+  → Release integrity and export hardening: 13 passed, 0 failed
+
+-------------------------------------------
+1678 passed, 0 failed, total 251134 ms
+exit=0 secs=251

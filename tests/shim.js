@@ -6,10 +6,8 @@
  * just enough of `document`/`fetch` so accidental DOM/network usage in code
  * paths exercised by tests fails fast instead of silently swallowing errors.
  *
- * Modules are loaded in dependency order:
- *   Molecule -> SmilesParser/SmilesWriter/SmartsParser/SmartsMatch
- *            -> SMSDGraph -> SMSDRings -> SMSDVF2 -> SMSDMCS
- *            -> History
+ * Modules are loaded in bundle order: tools/editor-files.js ENGINE_FILES, i.e.
+ * every editor module except the UI-only ones (ADR-0001).
  */
 'use strict';
 
@@ -64,18 +62,14 @@ function loadAll() {
     // cannot follow. Under Node/pkg the engine is not yet present, so this
     // is a no-op on first call and the normal load path runs.
     if (globalThis.Molecule && globalThis.SmilesParser) { loaded = true; return globalThis; }
-    require_editor('Molecule');
-    require_editor('SmilesParser');
-    require_editor('SmilesWriter');
-    require_editor('SmartsParser');
-    require_editor('SmartsMatch');
-    require_editor('CIPStereo');
-    require_editor('SMSDGraph');
-    require_editor('SMSDRings');
-    require_editor('SMSDVF2');
-    require_editor('SMSDMCS');
-    require_editor('History');
-    require_editor('ToolbarPrefs');
+    // v3.2.0 (ADR-0001): load the browser's engine — every non-UI module of
+    // the bundle, in bundle order — so tests and the CLI run the same layout
+    // as the browser. (Before 3.2.0 this was a hand-written subset that lacked
+    // Templates, SMSDLayout, SDGLayout and editor/sdg/*.)
+    var ENGINE_FILES = require(path.join(__dirname, '..', 'tools', 'editor-files.js')).ENGINE_FILES;
+    for (var i = 0; i < ENGINE_FILES.length; i++) {
+        require(path.join(__dirname, '..', 'editor', ENGINE_FILES[i]));
+    }
     loaded = true;
     return globalThis;
 }

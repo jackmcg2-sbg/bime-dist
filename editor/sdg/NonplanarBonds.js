@@ -94,7 +94,10 @@
      */
     NonplanarBonds.assignTetrahedral = function (mol, atom, bonds, ringAtomSet, bondsByAtom) {
         if (!atom || !bonds || bonds.length < 3) return 0;
-        var bestBond = null, bestScore = -Infinity;
+        // v3.2.0: wedge sense comes from the drawn geometry and the atom's
+        // @/@@ token (FR-004a). Without a token there is nothing to draw.
+        if (atom.chirality !== '@' && atom.chirality !== '@@') return 0;
+        var candidates = [];
 
         for (var i = 0; i < bonds.length; i++) {
             var b = bonds[i];
@@ -148,20 +151,19 @@
                 // Larger diff = more outward = better.
                 score += (diff / Math.PI) * 40;
             }
-            if (score > bestScore) {
-                bestScore = score;
-                bestBond = b;
-            }
+            candidates.push({ bond: b, otherId: otherId, score: score, order: i });
         }
 
+        // Best-scoring bond first (ties: bond order at the atom, as before).
+        candidates.sort(function (p, q) { return (q.score - p.score) || (p.order - q.order); });
+        var bestBond = null, stereoVal = STEREO_NONE;
+        for (var c = 0; c < candidates.length && !bestBond; c++) {
+            var sense = NonplanarBonds._wedgeSense(mol, atom, candidates[c].otherId);
+            if (sense === null) continue;   // degenerate geometry for this bond; try the next
+            bestBond = candidates[c].bond;
+            stereoVal = sense;
+        }
         if (!bestBond) return 0;
-
-        // Determine wedge vs dash.
-        // Convention: '@' (anti-clockwise SMILES) = S, '@@' = R.
-        // Wedge (up) at 'R' centre means the wedged neighbour is on the
-        // viewer side; dash (down) means it's behind.
-        var label = atom.cipLabel || (atom.chirality === '@' ? 'S' : 'R');
-        var stereoVal = (label === 'R') ? STEREO_WEDGE : STEREO_DASH;
         // v1.8.19: write to bond.depictStereo (depiction-only field)
         // INSTEAD of bond.stereo. bond.stereo is read by SmilesWriter
         // for E/Z directional markers (/ and \) — overwriting it would
@@ -169,12 +171,48 @@
         // ImageExport reads bond.depictStereo first, falling back to
         // bond.stereo for backward compatibility (MOL-imported wedges).
         bestBond.depictStereo = stereoVal;
-        // Record which atom is the WIDE end of the wedge so the
-        // depicter knows which way to draw it. atom is the stereo
-        // centre — wide end. We DO NOT mutate bond.atom1 / bond.atom2
+        // Record the stereocentre end of the wedge (drawn as the narrow
+        // point by ImageExport) so the depicter knows which way to draw it.
+        // We DO NOT mutate bond.atom1 / bond.atom2
         // because that would break SmilesWriter's directional encoding.
         bestBond.depictStereoFromAtom = atom.id;
         return 1;
+    };
+
+    /**
+     * _wedgeSense(mol, atom, wedgeNbId) — v3.2.0. STEREO_WEDGE or STEREO_DASH
+     * for a wedge from `atom` to neighbour `wedgeNbId` such that the drawing
+     * reads back as the atom's @/@@ token, or null when the 2D arrangement is
+     * degenerate. The token's frame is the parser's: heavy neighbours in
+     * getNeighbors() order, implicit H last (placed in-plane opposite the mean
+     * neighbour direction). Coordinates are screen (y down), so y is negated.
+     */
+    NonplanarBonds._wedgeSense = function (mol, atom, wedgeNbId) {
+        var nbs = mol.getNeighbors(atom.id) || [];
+        var v = [];
+        for (var i = 0; i < nbs.length; i++) {
+            var a = mol.getAtom(nbs[i]);
+            if (!a) return null;
+            v.push([a.x - atom.x, -(a.y - atom.y), nbs[i] === wedgeNbId ? 1 : 0]);
+        }
+        if (v.length === 3) {
+            var sx = 0, sy = 0;
+            for (var k = 0; k < 3; k++) {
+                var l = Math.sqrt(v[k][0] * v[k][0] + v[k][1] * v[k][1]) || 1;
+                sx += v[k][0] / l; sy += v[k][1] / l;
+            }
+            v.push([-sx, -sy, 0]);
+        }
+        if (v.length !== 4) return null;
+        var r = [];
+        for (var j = 1; j < 4; j++) { r.push([v[j][0] - v[0][0], v[j][1] - v[0][1], v[j][2] - v[0][2]]); }
+        var vol = r[0][0] * (r[1][1] * r[2][2] - r[1][2] * r[2][1]) -
+                  r[0][1] * (r[1][0] * r[2][2] - r[1][2] * r[2][0]) +
+                  r[0][2] * (r[1][0] * r[2][1] - r[1][1] * r[2][0]);
+        if (Math.abs(vol) < 1e-6) return null;
+        // A wedge (neighbour toward the viewer) with positive volume reads '@@'.
+        var wedgeReads = vol > 0 ? '@@' : '@';
+        return wedgeReads === atom.chirality ? STEREO_WEDGE : STEREO_DASH;
     };
 
     /**

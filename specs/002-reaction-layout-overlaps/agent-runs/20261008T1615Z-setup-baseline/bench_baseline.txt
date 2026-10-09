@@ -1,0 +1,10 @@
+baseline written to tests/data/layout_corpus.json
+module set: cli-3.1-pre   repair: on
+   bin    n |  %cross   mean  close  sev   medMs | base: %cross   mean   medMs | rdkit: %cross   mean
+  2-15  100 |       0      0   0.02    0     1.2 |            0      0     1.2 |             0      0
+ 16-30  121 |    11.6   0.36   1.01    0     7.2 |         11.6   0.36     7.2 |           1.7   0.05
+ 31-50   66 |    39.4   2.06   4.35    2    19.5 |         39.4   2.06    19.5 |             0      0
+ 51-80   74 |    85.1  12.93  23.23    0    96.1 |         85.1  12.93    96.1 |             0      0
+   81+    6 |     100  10.67  23.83    0     210 |          100  10.67     210 |          33.3   1.33
+totals: crossings 1201 (baseline 1201), close pairs 2273, severe 2
+worst: PRISTCOAFAOXFADmx.rxn(68): 29x/40c; PTDCACOAFAOXFADmm.rxn(64): 28x/46c; PTDCACOAFAOXFADmm.rxn(64): 28x/46c; C12OHc.rxn(62): 28x/42c; DDCA4ECOAOXFAOXCOAmm.rxn(62): 28x/42c

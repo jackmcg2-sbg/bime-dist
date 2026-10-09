@@ -55,7 +55,15 @@ function loadEditor() {
     // filesystem-relative dynamic requires below (a static bundler cannot
     // follow them). Under Node/pkg the engine is not yet present, so this is
     // a no-op on first call and the normal load path runs.
-    if (globalThis.RDT && globalThis.SmilesParser && globalThis.Layout) { return globalThis; }
+    if (globalThis.RDT && globalThis.SmilesParser && globalThis.Layout) {
+        // v3.2.0 (ADR-0001): a static bundle must carry the whole engine. The
+        // layout modules below are optional globals to Layout.js, so a bundle
+        // without them runs a reduced layout (no E/Z correction, no repair).
+        if (!(globalThis.SDG && globalThis.SDGLayout && globalThis.SMSDLayout && globalThis.Templates)) {
+            process.stderr.write('bime: layout modules missing from this build; figures may differ from the browser\n');
+        }
+        return globalThis;
+    }
     var shim = require(SHIM_PATH);
     shim.loadAll();
     require(path.join(ROOT, 'editor', 'RDT.js'));

@@ -158,8 +158,19 @@
         // or atom clashes). This keeps the conservative default path for
         // ordinary structures while rescuing hard multi-ring/branched
         // molecules without requiring callers to opt into useSDG globally.
-        adaptiveSDGRescue: true
+        adaptiveSDGRescue: true,
+        // v3.2.0: fold-back repair (Step 16R) — removes bond crossings and
+        // atom clashes left by chains/branches folded back over the molecule,
+        // by rigid subtree moves about acyclic single bonds. Always on;
+        // INTERNAL switch for measurement only (tests, tools/layout-bench.js
+        // --no-repair). Not a user option.
+        foldBackRepair: true
     };
+
+    // v3.2.0: statistics of the most recent Step 16R run (one component),
+    // read by tests only: { atoms, skipped, iterations, escapes, evaluations,
+    // moves, kept }.
+    Layout._lastRepairStats = null;
 
     /**
      * Compute 2D coordinates for every atom in `mol`.
@@ -949,7 +960,8 @@
         //        whether the depicted geometry matches and reflects the
         //        smaller subtree if not).
         //   16b. NonplanarBonds.assign — pick the best wedge/dash bond at
-        //        each tetrahedral stereo centre.
+        //        each tetrahedral stereo centre. Runs LAST (v3.2.0): the
+        //        wedge sense follows the final geometry.
         //   16c. LayoutRefiner.alignToLongestAxis — PCA rotation so the
         //        principal axis is horizontal (publication convention).
         //   16d. LayoutRefiner.rotateRings — try 180° flip per ring, keep
@@ -980,12 +992,9 @@
                     sdg16.CorrectGeometricConfiguration.correct(mol);
                 }
             } catch (e1) { /* keep layout if EZ correction fails */ }
-            try {
-                if (sdg16 && sdg16.NonplanarBonds &&
-                    Layout.options.assignWedgeDash !== false) {
-                    sdg16.NonplanarBonds.assign(mol);
-                }
-            } catch (e2) { /* keep layout if wedge/dash assign fails */ }
+            // 16R (v3.2.0). Fold-back repair — after the E/Z geometry is set,
+            // before alignment, ring flips and wedges (research R2).
+            runFoldBackRepair(mol, atomIds);
             try {
                 if (sdg16 && sdg16.LayoutRefiner) {
                     sdg16.LayoutRefiner.refine(mol, rings, {
@@ -1025,6 +1034,19 @@
                     linearizeMacroChain(mol, atomIds, rings, ringSystems, ringAtomSet);
                 }
             } catch (e5) { /* keep layout if linearisation fails */ }
+            // 16b (moved last in v3.2.0). NonplanarBonds.assign — wedge/hash
+            // at each tetrahedral stereo centre. The wedge sense is read from
+            // the final geometry, so it must run after every step that moves
+            // atoms (16d ring flips, 16e H placement).
+            try {
+                if (sdg16 && sdg16.NonplanarBonds &&
+                    Layout.options.assignWedgeDash !== false) {
+                    sdg16.NonplanarBonds.assign(mol);
+                }
+            } catch (e2) { /* keep layout if wedge/dash assign fails */ }
+        } else {
+            // Step 16 disabled: the repair still runs (it is part of layout).
+            runFoldBackRepair(mol, atomIds);
         }
     }
 
@@ -4613,6 +4635,294 @@
     // =====================================================================
     // Utility functions
     // =====================================================================
+
+    // =====================================================================
+    // v3.2.0 Step 16R — fold-back repair (specs/002-reaction-layout-overlaps,
+    // research R3/R4/R6).
+    //
+    // Chains and branches placed greedily can fold back over a distant part
+    // of the molecule, crossing bonds and piling atoms together. This step
+    // moves whole subtrees RIGIDLY about acyclic single bonds ("pivots"):
+    //   reflect   — mirror the subtree across the pivot line;
+    //   stretch   — slide it outward so the pivot bond is 1.15 BL (inside the
+    //               1.2 BL bound existing layout tests hold);
+    //   rotate(θ) — turn it about the pivot's fixed atom.
+    // Each greedy step applies the single move with the largest score drop;
+    // when none helps, an escape tries the best "sideways" moves followed by
+    // the best single move. Ring internal geometry never changes (rings move
+    // only as part of a subtree), specified E/Z relations are checked after
+    // every move, and the result is kept only if the whole-molecule quality
+    // and every reported defect count are no worse than before.
+    // Deterministic: bonds and moves in fixed order, first-wins ties.
+    // =====================================================================
+
+    var REPAIR_MAX_ATOMS = 300;
+    var REPAIR_MAX_ITERATIONS = 60;
+    var REPAIR_ESCAPE_K = 8;
+    var REPAIR_MAX_ESCAPES = 8;
+    var REPAIR_MAX_EVALUATIONS = 50000;
+    var REPAIR_ROTATIONS = [30, -30, 60, -60, 90, -90, 120, -120, 180];
+    // Research R6 lever 1 (SC-009), applied by size: components above
+    // REPAIR_FULL_ROTATION_ATOMS use the reduced set (±90°, ±120° dropped),
+    // where layout time is the constraint; smaller ones keep the full set.
+    var REPAIR_ROTATIONS_LARGE = [30, -30, 60, -60, 180];
+    var REPAIR_FULL_ROTATION_ATOMS = 50;
+    var REPAIR_STRETCH = 1.15;   // stretched pivot length, x BOND_LENGTH (never shortens)
+
+    function runFoldBackRepair(mol, atomIds) {
+        if (!Layout.options || Layout.options.foldBackRepair === false) { return; }
+        try { foldBackRepair(mol, atomIds); } catch (eR) { /* keep layout if the repair fails */ }
+    }
+
+    // Reported defect counts (crossings; close pairs < 0.6 BL; severe < 0.35 BL).
+    function repairReport(X, Y, N, E, bonded) {
+        var r = { crossings: 0, closePairs: 0, severe: 0 };
+        for (var i = 0; i < N; i++) {
+            for (var j = i + 1; j < N; j++) {
+                if (bonded[i * N + j]) { continue; }
+                var d = Math.sqrt((X[i] - X[j]) * (X[i] - X[j]) + (Y[i] - Y[j]) * (Y[i] - Y[j])) / BOND_LENGTH;
+                if (d < 0.35) { r.severe++; } else if (d < 0.6) { r.closePairs++; }
+            }
+        }
+        for (var e = 0; e < E.length; e++) {
+            for (var f = e + 1; f < E.length; f++) {
+                if (repairBondsCross(X, Y, E[e], E[f])) { r.crossings++; }
+            }
+        }
+        return r;
+    }
+
+    function repairBondsCross(X, Y, e, f) {
+        var a = e[0], b = e[1], c = f[0], d = f[1];
+        if (a === c || a === d || b === c || b === d) { return false; }
+        return segmentsCrossStrict(X[a], Y[a], X[b], Y[b], X[c], Y[c], X[d], Y[d]);
+    }
+
+    function foldBackRepair(mol, atomIds) {
+        var N = atomIds.length;
+        var stats = { atoms: N, skipped: false, iterations: 0, escapes: 0, evaluations: 0, moves: 0, kept: true };
+        Layout._lastRepairStats = stats;
+        if (N < 4) { return; }
+        if (N > REPAIR_MAX_ATOMS) { stats.skipped = true; return; }
+
+        var idx = {}, i, j;
+        for (i = 0; i < N; i++) { idx[atomIds[i]] = i; }
+        var X = new Array(N), Y = new Array(N), adj = [];
+        for (i = 0; i < N; i++) {
+            var at = mol.getAtom(atomIds[i]);
+            X[i] = at.x; Y[i] = at.y; adj.push([]);
+        }
+        var E = [], bonded = {};
+        for (i = 0; i < mol.bonds.length; i++) {
+            var bd = mol.bonds[i];
+            if (idx[bd.atom1] === undefined || idx[bd.atom2] === undefined) { continue; }
+            var u0 = idx[bd.atom1], v0 = idx[bd.atom2];
+            E.push([u0, v0, bd]);
+            adj[u0].push(v0); adj[v0].push(u0);
+            bonded[u0 * N + v0] = true; bonded[v0 * N + u0] = true;
+        }
+
+        var before = repairReport(X, Y, N, E, bonded);
+        if (!before.crossings && !before.closePairs && !before.severe) { return; }   // FR-011
+
+        // Specified double bonds: their cis/trans relation must survive every move.
+        var ezBonds = [];
+        var cip = global.CIPStereo;
+        for (i = 0; i < E.length; i++) {
+            var b2 = E[i][2];
+            if (b2.type !== 2) { continue; }
+            var label = b2.cipLabel;
+            if (label !== 'E' && label !== 'Z' && cip && cip.doubleBondEZ) {
+                try { label = cip.doubleBondEZ(mol, b2); } catch (eZ) { label = null; }
+            }
+            if (label === 'E' || label === 'Z') { ezBonds.push({ a: E[i][0], b: E[i][1] }); }
+        }
+        function sideOf(p, a, b) {
+            var v = (X[b] - X[a]) * (Y[p] - Y[a]) - (Y[b] - Y[a]) * (X[p] - X[a]);
+            return v > 1e-9 ? 1 : (v < -1e-9 ? -1 : 0);
+        }
+        function ezSignature() {
+            var sig = [];
+            for (var k = 0; k < ezBonds.length; k++) {
+                var a = ezBonds[k].a, b = ezBonds[k].b;
+                var sa = adj[a].filter(function (x) { return x !== b; }).map(function (x) { return sideOf(x, a, b); });
+                var sb = adj[b].filter(function (x) { return x !== a; }).map(function (x) { return sideOf(x, a, b); });
+                // Relation of the first substituents, plus whether each end stays fanned.
+                sig.push((sa[0] || 0) * (sb[0] || 0), sa.length === 2 ? sa[0] * sa[1] : 0, sb.length === 2 ? sb[0] * sb[1] : 0);
+            }
+            return sig.join(',');
+        }
+        var ezRef = ezSignature();
+
+        // Local cost terms (research R3): close/severe pairs, crossings, the
+        // pivot bond's length and acute angles at the pivot's fixed atom.
+        function pairCost(p, q) {
+            if (bonded[p * N + q]) { return 0; }
+            var d = Math.sqrt((X[p] - X[q]) * (X[p] - X[q]) + (Y[p] - Y[q]) * (Y[p] - Y[q])) / BOND_LENGTH;
+            if (d < 0.35) { return 200 + (0.35 - d) * 50; }
+            if (d < 0.6) { return 3 + (0.6 - d) * 20; }
+            return 0;
+        }
+        function bondCost(e) {
+            var a = E[e][0], b = E[e][1];
+            var l = Math.sqrt((X[a] - X[b]) * (X[a] - X[b]) + (Y[a] - Y[b]) * (Y[a] - Y[b])) / BOND_LENGTH;
+            return l < 0.65 ? 50 + (0.65 - l) * 10 : (l > 1.25 ? 50 + (l - 1.25) * 10 : 0);
+        }
+        function angleCost(c) {
+            var s = 0, nb = adj[c];
+            for (var p = 0; p < nb.length; p++) {
+                for (var q = p + 1; q < nb.length; q++) {
+                    var d = Math.abs(Math.atan2(Y[nb[p]] - Y[c], X[nb[p]] - X[c]) - Math.atan2(Y[nb[q]] - Y[c], X[nb[q]] - X[c]));
+                    if (d > Math.PI) { d = 2 * Math.PI - d; }
+                    if (d < Math.PI / 4) { s += 4 + (Math.PI / 4 - d) * 20; }
+                }
+            }
+            return s;
+        }
+
+        // Pivot candidates: acyclic single bonds with degree >= 2 at both ends;
+        // the moving side is the one rooted at v, at most half the component.
+        var cands = [];
+        for (var e = 0; e < E.length; e++) {
+            var be = E[e][2];
+            if (be.type !== 1 && be.type !== undefined) { continue; }
+            var ends = [[E[e][0], E[e][1]], [E[e][1], E[e][0]]];
+            for (var s = 0; s < 2; s++) {
+                var u = ends[s][0], v = ends[s][1];
+                if (adj[u].length < 2 || adj[v].length < 2) { continue; }
+                var mask = new Array(N), list = [v], stack = [v], cyclic = false;
+                mask[v] = true;
+                while (stack.length) {
+                    var x = stack.pop();
+                    for (var n = 0; n < adj[x].length; n++) {
+                        var y = adj[x][n];
+                        if (y === u) { if (x !== v) { cyclic = true; } continue; }
+                        if (!mask[y]) { mask[y] = true; stack.push(y); list.push(y); }
+                    }
+                }
+                if (cyclic || list.length * 2 > N + 1) { continue; }
+                var sEdges = [];
+                for (var f = 0; f < E.length; f++) { if (mask[E[f][0]] || mask[E[f][1]]) { sEdges.push(f); } }
+                var inS = {};
+                for (var g = 0; g < sEdges.length; g++) { inS[sEdges[g]] = true; }
+                cands.push({ u: u, v: v, e: e, mask: mask, list: list, edges: sEdges, inEdges: inS });
+            }
+        }
+        if (!cands.length) { return; }
+
+        // Cost of the moving side against the fixed rest (rigid moves leave
+        // internal pairs unchanged), plus the pivot bond and angles at u.
+        function localCost(c) {
+            var cost = 0, k, m;
+            for (k = 0; k < c.list.length; k++) {
+                for (m = 0; m < N; m++) { if (!c.mask[m]) { cost += pairCost(c.list[k], m); } }
+            }
+            for (k = 0; k < c.edges.length; k++) {
+                for (m = 0; m < E.length; m++) {
+                    if (c.inEdges[m]) { continue; }
+                    if (repairBondsCross(X, Y, E[c.edges[k]], E[m])) { cost += 6; }
+                }
+            }
+            return cost + bondCost(c.e) + angleCost(c.u);
+        }
+        function applyMove(c, kind, theta) {
+            var ox = X[c.u], oy = Y[c.u];
+            var dx = X[c.v] - ox, dy = Y[c.v] - oy, L = Math.sqrt(dx * dx + dy * dy) || 1;
+            var ux = dx / L, uy = dy / L, k, p, px, py;
+            if (kind === 0) {             // reflect across the pivot line
+                for (k = 0; k < c.list.length; k++) {
+                    p = c.list[k]; px = X[p] - ox; py = Y[p] - oy;
+                    var t = px * ux + py * uy;
+                    X[p] = ox + 2 * t * ux - px; Y[p] = oy + 2 * t * uy - py;
+                }
+            } else if (kind === 1) {      // stretch the pivot bond to REPAIR_STRETCH x BL
+                var shift = Math.max(0, REPAIR_STRETCH * BOND_LENGTH - L);
+                for (k = 0; k < c.list.length; k++) { p = c.list[k]; X[p] += shift * ux; Y[p] += shift * uy; }
+            } else {                      // rotate about u
+                var cs = Math.cos(theta), sn = Math.sin(theta);
+                for (k = 0; k < c.list.length; k++) {
+                    p = c.list[k]; px = X[p] - ox; py = Y[p] - oy;
+                    X[p] = ox + cs * px - sn * py; Y[p] = oy + sn * px + cs * py;
+                }
+            }
+        }
+        var MOVES = [[0, 0], [1, 0]];
+        var rotations = N > REPAIR_FULL_ROTATION_ATOMS ? REPAIR_ROTATIONS_LARGE : REPAIR_ROTATIONS;
+        for (i = 0; i < rotations.length; i++) { MOVES.push([2, rotations[i] * Math.PI / 180]); }
+
+        function saveSide(c) { return { x: c.list.map(function (p) { return X[p]; }), y: c.list.map(function (p) { return Y[p]; }) }; }
+        function restoreSide(c, sv) { for (var k = 0; k < c.list.length; k++) { X[c.list[k]] = sv.x[k]; Y[c.list[k]] = sv.y[k]; } }
+
+        // All scored single moves (gain = local cost drop), in fixed order.
+        function scoreMoves(skip) {
+            var out = [];
+            for (var ci = 0; ci < cands.length; ci++) {
+                var c = cands[ci];
+                if (c === skip) { continue; }
+                var base = localCost(c);
+                if (base <= 0) { continue; }
+                var sv = saveSide(c);
+                for (var mi = 0; mi < MOVES.length; mi++) {
+                    if (stats.evaluations >= REPAIR_MAX_EVALUATIONS) { return out; }
+                    stats.evaluations++;
+                    applyMove(c, MOVES[mi][0], MOVES[mi][1]);
+                    var gain = base - localCost(c);
+                    var ezOk = !ezBonds.length || ezSignature() === ezRef;
+                    if (ezOk) { out.push({ gain: gain, c: c, after: saveSide(c) }); }
+                    restoreSide(c, sv);
+                }
+            }
+            return out;
+        }
+        function bestOf(moves) {
+            var best = null;
+            for (var k = 0; k < moves.length; k++) { if (!best || moves[k].gain > best.gain) { best = moves[k]; } }
+            return best;
+        }
+
+        var X0 = X.slice(), Y0 = Y.slice();
+        for (stats.iterations = 0; stats.iterations < REPAIR_MAX_ITERATIONS; stats.iterations++) {
+            if (stats.evaluations >= REPAIR_MAX_EVALUATIONS) { break; }
+            var moves = scoreMoves(null);
+            var best = bestOf(moves);
+            if (best && best.gain > 1e-6) {
+                restoreSide(best.c, best.after);
+                stats.moves++;
+                continue;
+            }
+            // Escape: a sideways move followed by the best single move.
+            if (stats.escapes >= REPAIR_MAX_ESCAPES) { break; }
+            moves.sort(function (p, q) { return q.gain - p.gain; });
+            var escaped = false;
+            for (var k2 = 0; k2 < Math.min(REPAIR_ESCAPE_K, moves.length) && !escaped; k2++) {
+                var first = moves[k2], keep = saveSide(first.c);
+                restoreSide(first.c, first.after);
+                var second = bestOf(scoreMoves(first.c));
+                if (second && first.gain + second.gain > 1e-6) {
+                    restoreSide(second.c, second.after);
+                    stats.moves += 2; stats.escapes++; escaped = true;
+                } else {
+                    restoreSide(first.c, keep);
+                }
+            }
+            if (!escaped) { break; }
+        }
+
+        // Final guard (FR-009, analyze F4): keep the repaired layout only if
+        // whole-molecule quality and every reported defect count are no worse.
+        var after = repairReport(X, Y, N, E, bonded);
+        var q0 = Layout.quality(mol, atomIds);
+        var saved = atomIds.map(function (id) { var a = mol.getAtom(id); return [a.x, a.y]; });
+        for (i = 0; i < N; i++) { var am = mol.getAtom(atomIds[i]); am.x = X[i]; am.y = Y[i]; }
+        var q1 = Layout.quality(mol, atomIds);
+        var worse = after.crossings > before.crossings || after.closePairs > before.closePairs ||
+                    after.severe > before.severe || (q1.hardFailures || 0) > (q0.hardFailures || 0) ||
+                    q1.penalty > q0.penalty + 1e-6 || ezSignature() !== ezRef;
+        if (worse || (X.join() === X0.join() && Y.join() === Y0.join())) {
+            for (j = 0; j < N; j++) { var ar = mol.getAtom(atomIds[j]); ar.x = saved[j][0]; ar.y = saved[j][1]; }
+            stats.kept = !worse;
+        }
+    }
 
     function dist(x1, y1, x2, y2) {
         var dx = x2 - x1, dy = y2 - y1;

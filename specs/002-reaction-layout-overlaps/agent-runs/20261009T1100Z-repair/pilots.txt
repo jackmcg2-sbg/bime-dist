@@ -1,0 +1,3 @@
+GDA1_HPRNStlr {"crossings":11,"closePairs":16,"severe":0,"abnormalBonds":14}
+GGH_10FTHF7GLUl {"crossings":2,"closePairs":3,"severe":0,"abnormalBonds":3}
+CE2872DIOer {"crossings":1,"closePairs":3,"severe":0,"abnormalBonds":1}
