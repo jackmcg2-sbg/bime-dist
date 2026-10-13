@@ -1,0 +1,108 @@
+# Architecture delta — Feature 002 reaction-layout-overlaps
+# Constitution Principle V-A. Authoritative; plan.md "Architecture Impact" summarises it.
+feature: 002-reaction-layout-overlaps
+base: d75758c  # Feature 001 (branch 001-reaction-map-label-legibility), on BIME v3.0.3
+date: 2026-10-08
+
+modules:
+  added:
+    - path: tools/layout-bench.js
+      role: maintainer benchmark (not a bime subcommand); reads tests/data/layout_corpus.json
+    - path: tests/test_v3_2_0_layout_quality.js
+      role: guard test (SC-001..SC-009, FR-020)
+    - path: tests/data/layout_corpus.json
+      role: fixture (367 corpus molecules, stereo/E-Z sets, RDKit references, baseline)
+    - path: specs/002-reaction-layout-overlaps/fixture-gen/layout_corpus_build.py
+      role: offline provenance script (needs RDKit); never run by tests or build
+  modified:
+    - path: editor/Layout.js
+      change: >
+        layoutComponent gains Step 16R (fold-back repair; private functions inside
+        Layout.js, research R3/R6) after 16a; Step 16b (wedges) moves to the end of
+        Step 16 (R2). New internal option Layout.options.foldBackRepair (default true,
+        FR-012a). No new public function.
+    - path: editor/sdg/CorrectGeometricConfiguration.js
+      change: >
+        reflect the whole smaller end of a mis-drawn double bond (all substituents of the
+        pivot atom), not only the top-priority branch (FR-004). Added 2026-10-09 at the
+        slice-2 stop-and-report, approved by the user ("Widen Slice 2 to fix it"); no new
+        dependency edge.
+        Extended 2026-10-09 at the slice-3 stop-and-report ("Fix both"): in-ring double bond
+        with an unfanned exocyclic substituent (T017a).
+    - path: editor/sdg/NonplanarBonds.js
+      change: assignTetrahedral derives wedge vs hash from 2D geometry + @/@@ (R5); bond choice unchanged
+    - path: tools/editor-files.js
+      change: new exports UI_FILES and ENGINE_FILES (= FILES minus UI_FILES); FILES and scriptTags unchanged
+    - path: tests/shim.js
+      change: loadAll() also loads ENGINE_FILES in bundle order (module parity, R1)
+    - path: tools/bime-cli.js
+      change: loadEditor static-bundle short-circuit also requires SDG/SDGLayout/SMSDLayout/Templates; one-line stderr warning if absent (R9)
+    - path: tests/test-manifest.js
+      change: register tests/test_v3_2_0_layout_quality.js
+    - path: tests/data/reaction_map_pilot.json
+      change: only if FR-019 re-pinning is needed (each change listed with cause in the receipt)
+  removed: []
+
+dependency_edges:
+  added:
+    - from: tests/shim.js
+      to: tools/editor-files.js
+      reason: single source of truth for the module set (R1); editor-files.js is a pure data module with no requires
+    - from: tools/layout-bench.js
+      to: tests/shim.js
+      reason: same engine loading as tests and CLI (as tools/bime-cli.js already does)
+  removed: []
+  unchanged_but_now_exercised_in_node:
+    - "Layout.js -> SMSDLayout / SDGLayout / SDG.* / Templates (existing global lookups; previously absent under Node)"
+
+public_interfaces:
+  cli:
+    - command: "bime clean | export | aam --format svg"
+      kind: output-change
+      compatible: "coordinates/figures change (repair, E/Z, wedges); no flags added or removed (FR-018)"
+    - command: "bime (static pre-built binary)"
+      kind: diagnostic addition
+      compatible: "stderr warning only when layout modules are absent; exit status unchanged"
+  embed_api:
+    - symbol: Layout.layout / Layout.layoutFragment
+      kind: behaviour-change
+      compatible: "signature unchanged; always-on repair (clarify: no opt-out)"
+    - symbol: Layout.options.foldBackRepair
+      kind: internal option (undocumented; FR-012a)
+    - symbol: tools/editor-files.js ENGINE_FILES, UI_FILES
+      kind: addition (build-tool module)
+      compatible: true
+  file_formats: []   # SMILES/SMARTS/MOL/SDF writers unchanged; SVG vocabulary unchanged; MOL coordinates change only
+
+persistent_data_structures: []
+
+pinned_unchanged:
+  - dist/* (rebuilt only at release; constitution IV)
+  - all HTML page script lists (no new editor/ module)
+  - tools/editor-files.js FILES order and scriptTags output
+  - ImageExport.js, MolfileWriter.js, SmilesWriter.js source
+
+forbidden_edges:
+  - "editor/* -> tools/* (library must not depend on build tooling)"
+  - "editor/* -> tests/*"
+  - "any runtime edge to RDKit or Python (offline fixture generation only)"
+
+conformance:
+  constitution: "I, II, III, IV, V — conforming (see plan.md Constitution Check)"
+  adrs: >
+    ADR-0001 written and accepted at Gate 2A (docs/decisions/0001-node-loads-engine-module-set.md). It was recommended (V-A trigger "introduces a shared
+    data representation"): the engine/UI classification of editor modules (ENGINE_FILES /
+    UI_FILES) becomes the single definition of what Node consumers load, and every future
+    editor module must be classified. Proposed ADR-0001 "One module list; Node loads the
+    engine set".
+  cycles: none (editor-files.js has no requires)
+  smallest_conforming_alternative: >
+    repair as private functions inside Layout.js (no new editor module, so no page,
+    bundle-list or loader changes); parity through the existing shim.loadAll() call the
+    CLI already makes (no second list).
+  alternatives_rejected:
+    - "new editor/sdg/FoldBackRepair.js: cleaner separation, but adds a bundle entry, every HTML page's script list and a dist rebuild for one caller"
+    - "hard-coded module lists in shim and CLI: re-creates the drift that caused E6"
+    - "parity only in CLI: tests would keep exercising a layout users never get (FR-002)"
+
+verdict: APPROVE_WITH_ADR   # Gate 2A, 2026-10-08, by the user (jackmcg2); ADR: docs/decisions/0001-node-loads-engine-module-set.md (Accepted)

@@ -1,0 +1,44 @@
+Reaction-map legibility (v3.1.0)
+  ✓ H1 atom pixel transform matches drawn element labels (harness sanity)
+  ✓ H2 overlap primitives behave (box/box, segment/box) and the parser reads bond coordinates
+  ✓ H3 contrast oracle matches WCAG reference values
+  ✓ H4 every pilot renders, maps, and draws map numbers
+  ✓ P1 toSVG / toPublicationSVG / toPrintSVG are byte-identical to 3.0.3
+  ✓ L1 parseColor reads #rgb, #rrggbb and rgb()
+  ✓ L2 luminance / contrast match WCAG reference values
+  ✓ L3 composite blends a halo at its opacity over the canvas
+  ✓ L4 remedyColour keeps hue + saturation and meets the threshold
+  ✓ L5 remedyColour returns the input when it already passes, null when unreachable
+  ✓ L6 remedyColour is deterministic and only moves as far as needed
+  ✓ US1-a every atom text item meets 3:1 on every pilot (SC-001)
+  ✓ US1-b no unconditional knockout rects; any patch hides a genuinely failing colour (SC-004)
+  ✓ US1-c an O / N label on a pale halo gets neither box nor recolour (esterification)
+  ✓ US1-d a failing label is recoloured within its own hue (minContrast 6)
+  ✓ US1-e unreachable contrast falls back to a tight rounded patch (minContrast 21)
+  ✓ US1-f transparent background is judged against white and stays legible
+  ✓ US1-g the screen palette also meets 3:1 (publication:false)
+  ✓ US1-h bonds stop short of their own atom label (FR-006)
+  ✓ US2-0 placement primitives agree with the independent harness (boxOverlap, segInBox)
+    GDA1_HPRNStlr: map/map 0 (all 1), map/label 0 (all 0); 3.0.3 uncrowded 0/21; crowded map atoms 29/222
+    GGH_10FTHF7GLUl: map/map 0 (all 0), map/label 0 (all 0); 3.0.3 uncrowded 0/10; crowded map atoms 6/178
+    CE2872DIOer: map/map 0 (all 0), map/label 0 (all 0); 3.0.3 uncrowded 0/16; crowded map atoms 6/140
+  ✓ US2-a zero map/map and map/label overlaps for uncrowded atoms (SC-002)
+    GDA1_HPRNStlr: map/bond 9 (all 17); 3.0.3 uncrowded 62 (all 193), cap 15
+    GGH_10FTHF7GLUl: map/bond 1 (all 1); 3.0.3 uncrowded 50 (all 101), cap 12
+    CE2872DIOer: map/bond 1 (all 1); 3.0.3 uncrowded 44 (all 132), cap 11
+  ✓ US2-b uncrowded map/bond overlaps fall by at least 75% vs 3.0.3 (SC-003)
+  ✓ US2-c every uncrowded map number sits nearer its own atom than any other atom (FR-010)
+  ✓ US2-d map-number font never drops below 75% of standard (FR-010)
+  ✓ US2-e the same reaction renders byte-identically twice (SC-005, FR-009)
+  ✓ US2-f esterification: no map number collides, none sits on its own bonds
+  ✓ US2-g showMapNumbers:false draws no map numbers (FR-011)
+  ✓ US3-a explicit H is removed into its neighbour (bracket count +1, auto stays auto)
+  ✓ US3-b isotopic, charged, H-only and non-terminal hydrogens are kept (FR-013)
+  ✓ US3-c stereocentre configuration survives stripping at every neighbour position (FR-014)
+  ✓ US3-d surviving atom/bond ids are unchanged and the return value counts removals
+  ✓ US3-e hand pre-stripped fixture is the same chemistry (oracle check)
+  ✓ US3-f `aam --heavy-atoms` maps exactly the heavy atoms (json + text, FR-012/013)
+  ✓ US3-g `aam --heavy-atoms --format svg` draws the hand-stripped figure (SC-007)
+  ✓ US3-h `--heavy-atoms --keep-mapping` uses the curated map numbers minus H
+
+35 passed, 0 failed

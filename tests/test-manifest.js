@@ -105,6 +105,7 @@ var FILES = [
     'test_v3_0_1_stereo_golden.js',
     'test_v3_0_3_browser_export_stamp.js',
     'test_v3_1_0_reaction_map_legibility.js',
+    'test_v3_2_0_layout_quality.js',
     'test_v2_0_x_golden_reactions.js',
     'test_cip_ring_stereocentres.js',
     'test_release_integrity.js'

@@ -43,6 +43,12 @@
         var a2 = mol.getAtom(bond.atom2);
         if (!a1 || !a2) return false;
 
+        // v3.2.0: a two-substituent end whose substituents are not fanned
+        // either side of the double bond (both on one side, or one nearly in
+        // line with it) has no drawable cis/trans. Restore a 120° fan first.
+        var normalised = CorrectGeometricConfiguration._normaliseEnd(mol, a1.id, a2.id);
+        normalised = CorrectGeometricConfiguration._normaliseEnd(mol, a2.id, a1.id) || normalised;
+
         // Find the priority-1 substituent on each side.
         var sub1 = CorrectGeometricConfiguration._priorityNeighbour(mol, a1.id, a2.id);
         var sub2 = CorrectGeometricConfiguration._priorityNeighbour(mol, a2.id, a1.id);
@@ -64,16 +70,26 @@
         // Same sign → cis (Z); opposite → trans (E).
         var measuredZ = (s1Side * s2Side > 0);
         var wantsZ = bond.cipLabel === 'Z';
-        if (measuredZ === wantsZ) return false;  // already correct
+        if (measuredZ === wantsZ) return normalised;  // already correct
 
         // Need to flip ONE side. Pick the smaller-subtree side.
-        var subtree1 = CorrectGeometricConfiguration._collectSubtree(mol, sub1, a1.id);
-        var subtree2 = CorrectGeometricConfiguration._collectSubtree(mol, sub2, a2.id);
+        // v3.2.0: reflect the WHOLE smaller end — every substituent of the pivot
+        // atom and their subtrees. Reflecting only the top-priority branch left a
+        // two-substituent end with both groups on one side of the double bond
+        // (e.g. C/C(=C/CC)CO). When the two ends stay connected (the double
+        // bond is in a ring) there is no separate end to reflect; keep the
+        // pre-3.2 top-priority-branch reflection there.
+        var end1 = CorrectGeometricConfiguration._collectEnd(mol, a1.id, a2.id);
+        var end2 = CorrectGeometricConfiguration._collectEnd(mol, a2.id, a1.id);
+        if (!end1 || !end2) {
+            end1 = CorrectGeometricConfiguration._collectSubtree(mol, sub1, a1.id);
+            end2 = CorrectGeometricConfiguration._collectSubtree(mol, sub2, a2.id);
+        }
         var flipSide, pivotAtom;
-        if (subtree1.length <= subtree2.length) {
-            flipSide = subtree1; pivotAtom = a1;
+        if (end1.length <= end2.length) {
+            flipSide = end1; pivotAtom = a1;
         } else {
-            flipSide = subtree2; pivotAtom = a2;
+            flipSide = end2; pivotAtom = a2;
         }
 
         // Reflect each atom across the line through the bond axis.
@@ -155,6 +171,106 @@
             result.push(cur);
             var nbrs = mol.getNeighbors(cur) || [];
             for (var i = 0; i < nbrs.length; i++) {
+                if (visited[nbrs[i]]) continue;
+                visited[nbrs[i]] = true;
+                queue.push(nbrs[i]);
+            }
+        }
+        return result;
+    };
+
+    /**
+     * _normaliseEnd(mol, endId, partnerId) — v3.2.0. If `endId` has exactly two
+     * substituents (besides the double-bond partner) that are not fanned either
+     * side of the double bond — both on one side, or one within 30° of the bond
+     * line — rotate them rigidly about `endId` into an ideal 120° fan:
+     * the substituent with the larger subtree keeps its direction; the partner
+     * end and the other substituent are rotated to ±120° from it, keeping the
+     * partner end as close as possible to where it was. When the double bond
+     * or the end is in a ring, only a single exocyclic substituent is moved
+     * (to the open side); otherwise the end is left as placed. Returns true if
+     * anything moved.
+     */
+    CorrectGeometricConfiguration._normaliseEnd = function (mol, endId, partnerId) {
+        var E = mol.getAtom(endId), P = mol.getAtom(partnerId);
+        if (!E || !P) return false;
+        var subs = (mol.getNeighbors(endId) || []).filter(function (x) { return x !== partnerId; });
+        if (subs.length !== 2) return false;
+        var A = mol.getAtom(subs[0]), B = mol.getAtom(subs[1]);
+        if (!A || !B) return false;
+        function ang(a) { return Math.atan2(a.y - E.y, a.x - E.x); }
+        function norm(t) { while (t <= -Math.PI) t += 2 * Math.PI; while (t > Math.PI) t -= 2 * Math.PI; return t; }
+        var aP = ang(P), dA = norm(ang(A) - aP), dB = norm(ang(B) - aP);
+        var LIM = Math.PI / 6;   // 30°
+        var fanned = (dA > 0) !== (dB > 0) &&
+                     Math.abs(dA) > LIM && Math.abs(dA) < Math.PI - LIM &&
+                     Math.abs(dB) > LIM && Math.abs(dB) < Math.PI - LIM;
+        if (fanned) return false;
+        var partnerEnd = CorrectGeometricConfiguration._collectEnd(mol, partnerId, endId);
+        var subA = CorrectGeometricConfiguration._collectSubtree(mol, subs[0], endId);
+        var subB = CorrectGeometricConfiguration._collectSubtree(mol, subs[1], endId);
+        function has(list, id) { return list.indexOf(id) !== -1; }
+        function rotate(ids, by) {
+            var c = Math.cos(by), s = Math.sin(by);
+            for (var i = 0; i < ids.length; i++) {
+                var a = mol.getAtom(ids[i]); if (!a) continue;
+                var x = a.x - E.x, y = a.y - E.y;
+                a.x = E.x + c * x - s * y; a.y = E.y + s * x + c * y;
+            }
+        }
+        var ringA = has(subA, partnerId) || has(subA, subs[1]);
+        var ringB = has(subB, partnerId) || has(subB, subs[0]);
+        if (!partnerEnd || ringA || ringB) {
+            // v3.2.0 (T017a): the double bond or this end lies in a ring, so the
+            // ring neighbours stay put. If exactly one substituent is exocyclic
+            // (its subtree reaches neither the partner nor the other
+            // substituent), swing it rigidly to the open side: opposite the
+            // sum of the partner and ring-neighbour directions.
+            if (ringA === ringB) return false;
+            var exo = ringA ? B : A, exoTree = ringA ? subB : subA, ringNb = ringA ? A : B;
+            var ux = (P.x - E.x), uy = (P.y - E.y), lp = Math.hypot(ux, uy);
+            var vx = (ringNb.x - E.x), vy = (ringNb.y - E.y), lr = Math.hypot(vx, vy);
+            if (lp < EPS || lr < EPS) return false;
+            var sx = ux / lp + vx / lr, sy = uy / lp + vy / lr;
+            if (Math.hypot(sx, sy) < 1e-6) return false;         // partner and ring neighbour collinear
+            rotate(exoTree, norm(Math.atan2(-sy, -sx) - ang(exo)));
+            return true;
+        }
+        var big = subA.length >= subB.length ? A : B;
+        var small = big === A ? B : A;
+        var smallTree = big === A ? subB : subA;
+        var aBig = ang(big);
+        var cand = [aBig + 2 * Math.PI / 3, aBig - 2 * Math.PI / 3];
+        var pTarget = Math.abs(norm(cand[0] - aP)) <= Math.abs(norm(cand[1] - aP)) ? cand[0] : cand[1];
+        var sTarget = pTarget === cand[0] ? cand[1] : cand[0];
+        rotate([partnerId].concat(partnerEnd), norm(pTarget - aP));
+        rotate(smallTree, norm(sTarget - ang(small)));
+        return true;
+    };
+
+    /**
+     * _collectEnd(mol, endId, partnerId) — every atom reachable from `endId`
+     * without crossing to `partnerId`, excluding `endId` itself: the substituents
+     * of one end of a double bond and their subtrees. Returns null when the
+     * partner is reachable (the double bond is in a ring).
+     */
+    CorrectGeometricConfiguration._collectEnd = function (mol, endId, partnerId) {
+        var visited = {};
+        visited[endId] = true;
+        visited[partnerId] = true;
+        var queue = [], result = [];
+        var start = mol.getNeighbors(endId) || [];
+        for (var s = 0; s < start.length; s++) {
+            if (start[s] === partnerId) continue;
+            visited[start[s]] = true;
+            queue.push(start[s]);
+        }
+        while (queue.length > 0) {
+            var cur = queue.shift();
+            result.push(cur);
+            var nbrs = mol.getNeighbors(cur) || [];
+            for (var i = 0; i < nbrs.length; i++) {
+                if (nbrs[i] === partnerId && cur !== endId) return null;   // ring
                 if (visited[nbrs[i]]) continue;
                 visited[nbrs[i]] = true;
                 queue.push(nbrs[i]);

@@ -1,0 +1,9 @@
+module set: engine   repair: on
+   bin    n |  %cross   mean  close  sev   medMs | base: %cross   mean   medMs | rdkit: %cross   mean
+  2-15  100 |       0      0      0    0     2.8 |            0      0     1.2 |             0      0
+ 16-30  121 |     2.5   0.09   0.27    0    18.6 |         11.6   0.36     7.2 |           1.7   0.05
+ 31-50   66 |    13.6   0.21   0.67    0    66.4 |         39.4   2.06    19.5 |             0      0
+ 51-80   74 |    29.7   0.65   1.78    0   516.5 |         85.1  12.93    96.1 |             0      0
+   81+    6 |    83.3    5.5  10.83    0   966.3 |          100  10.67     210 |          33.3   1.33
+totals: crossings 106 (baseline 1201), close pairs 274, severe 0
+worst: AM1CCSitr.rxn(86): 21x/37c; BGAL2l.rxn(81): 6x/10c; CLDCOHOX.rxn(21): 5x/3c; CLDCOHOX.rxn(21): 5x/3c; FUCGALFUCGALACGLCGALGLUSIDEt.rxn(102): 4x/11c

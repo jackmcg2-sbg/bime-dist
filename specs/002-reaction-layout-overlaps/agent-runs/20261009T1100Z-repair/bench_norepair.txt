@@ -1,0 +1,9 @@
+module set: engine   repair: off
+   bin    n |  %cross   mean  close  sev   medMs | base: %cross   mean   medMs | rdkit: %cross   mean
+  2-15  100 |       0      0   0.03    0     2.7 |            0      0     1.2 |             0      0
+ 16-30  121 |      19    0.5   0.99   16    17.3 |         11.6   0.36     7.2 |           1.7   0.05
+ 31-50   66 |    43.9    1.7   3.42    8    64.4 |         39.4   2.06    19.5 |             0      0
+ 51-80   74 |    86.5  11.92  20.08   20   297.5 |         85.1  12.93    96.1 |             0      0
+   81+    6 |     100   10.5  20.67    0   741.5 |          100  10.67     210 |          33.3   1.33
+totals: crossings 1117 (baseline 1201), close pairs 1959, severe 44
+worst: DDCA7ZCOAOXFAOXCOAmm.rxn(62): 29x/42c; PRISTCOAFAOXFADmx.rxn(68): 29x/40c; TEDCA7Z3OHCOA.rxn(64): 28x/44c; C12OHc.rxn(62): 28x/42c; DDCA4ECOAOXFAOXCOAmm.rxn(62): 28x/42c

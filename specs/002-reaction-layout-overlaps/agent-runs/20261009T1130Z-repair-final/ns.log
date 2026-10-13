@@ -1,0 +1,28 @@
+Layout quality (v3.2.0)
+  ✓ H1 fixture: 367 corpus molecules, stereo and E/Z sets, provenance
+  ✓ H2 defect metric counts a constructed crossing, close pair and clash
+  ✓ H3 stereo read-back is calibrated: simple centres match RDKit labels
+  ✓ H4 E/Z side check reads a hand-drawn cis and trans
+  ✓ H5 ring comparer detects a 5% ring distortion and ignores rigid motion
+  ✓ H6 baseline recorded on unmodified code (T003)
+  ✓ US1-a ENGINE_FILES and UI_FILES partition FILES, in bundle order (ADR-0001)
+  ✓ US1-b CLI and browser engine lay out identically, fresh processes (SC-001)
+  ✓ US1-c CLI draws specified cis/trans as specified (SC-002, FR-004)
+  ✓ US1-c2 E/Z correction flips the whole end of a trisubstituted alkene (T009a)
+  ✓ US1-c3 corpus double bonds that 3.1 mis-draws (T009a): VITEBTENALCt, PHEPROARGr
+    (info) CIP labellers disagree on the input (not a drawing issue): CRBS_PTCSA_TEOStlr.rxn#27 RDKit S / BIME R, CRBS_PTCSA_TEOStlr.rxn#39 RDKit S / BIME R, G3PI45DP_12OCTAtrr.rxn#35 RDKit S / BIME R
+  ✓ US1-e every drawn stereocentre reads back as its input configuration (SC-002a, FR-004a)
+  ✓ US1-f wedges start at stereocentres; undrawn centres are listed
+  ✓ US1-d static bundle without layout modules warns once on stderr (R9, FR-005)
+  ✓ US2-a corpus crossings meet SC-003 against the baseline
+  ✓ US2-b no molecule ends worse than with the repair off (SC-004)
+  ✓ US2-c pilot figures: total crossings −75%, no severe clash (SC-005)
+  ✓ US2-d ring bond lengths and angles unchanged by the repair, within 1% (SC-006, FR-007)
+    (info) AM1CCSitr.rxn listed: both substituents of atom 49 on one side (macrocycle, FR-004 exception)
+  ✓ US2-e specified cis/trans survives the repair (FR-008)
+  ✓ US2-f defect-free molecules are not moved by the repair (FR-011)
+  ✓ US2-g same input, fresh processes: byte-identical figure and coordinates (SC-007, FR-014)
+  ✓ US2-h the repair never introduces an abnormal bond length (FR-010)
+  ✓ US2-i effort bound: >300 atoms skipped, evaluation cap respected (FR-012)
+
+23 passed, 0 failed

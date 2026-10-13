@@ -1,0 +1,55 @@
+== bime help 
+bime — command-line wrapper around the BIME engine.
+
+Usage:  bime <command> [args] [flags]
+
+Commands:
+  version                          Print bundle + module versions.
+  parse <smiles>                   SMILES diagnostic (atoms, bonds, elements).
+  clean <smiles>                   Run Layout.layout; print canonical SMILES.
+  aam   <reactionSmiles>           Atom-atom mapping (RDT.mapReaction).
+  export <smiles> --format <fmt>   Export to svg | mol | sdf | smiles.
+  help [command]                   Show this help, or per-command help.
+
+Global flags:
+  --in   <file|-> | --out <file>   I/O paths (default: stdin/stdout).
+  --format <text|json>             Output format where applicable.
+
+Run `bime help <command>` for per-command flags.
+== bime help aam
+bime aam <reactionSmiles>
+  Flags:
+    --format text|json|svg   (default: text)
+    --no-chemistry-aware Disable the v2.0.57 aromatic-ring + stereo penalty.
+    --timeout-ms N       Per-call timeout for the AAM solver (default: 2000).
+    --keep-mapping       Use the input :n atom-map numbers as-is (no re-solve);
+                         render/report a curated mapping instead of remapping it.
+    --heavy-atoms        Strip explicit H atoms before mapping (heavy-atom figure).
+  SVG (v2.4.13) — a publication-quality mapped-reaction figure: colour mol
+  + atom-atom map numbers + bond changes (red cleaved / green formed /
+  amber order) + sub-fragment trace colouring. Auto-sized; white background.
+    --screen             Use the on-screen look instead of the print preset.
+    --transparent        Transparent background (drop onto any page).
+    --reaction-center    Add dashed reaction-centre rings.
+    --no-map-numbers     Omit the atom-atom map numbers.
+    --ids                Caption components with the KEGG id, not the name.
+    --no-labels          Omit the per-component compound-name captions.
+    --width N --height N Pin the canvas size (default: auto-fit to content).
+    --out file           Write the SVG to a file (default: stdout).
+    --no-stamp           Opt out of the BIME provenance stamp.
+== bime help clean
+bime clean <smiles> [--format text|json]
+== bime help export
+bime export <smiles> --format svg|mol|sdf|rxn|smiles
+  Flags:
+    --format svg|mol|sdf|rxn|smiles
+    --width N --height N     SVG canvas size (svg only).
+    --out file               Write to file (default: stdout).
+    --no-stamp               v2.0.65: opt out of the BIME provenance
+                              stamp (default ON — embeds BIME version,
+                              SHA-384 fingerprint, Apache-2.0
+                              attribution into every artefact).
+== bime help parse
+bime parse <smiles> [--format text|json]
+== bime help version
+bime version — print BIME + RDT + AtomTrace + ToolbarPrefs versions.

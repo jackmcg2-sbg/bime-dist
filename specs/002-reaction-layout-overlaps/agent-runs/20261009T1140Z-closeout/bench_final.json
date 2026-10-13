@@ -1,0 +1,123 @@
+{
+ "perBin": {
+  "2-15": {
+   "n": 100,
+   "withCrossingsPct": 0,
+   "meanCrossings": 0,
+   "meanClosePairs": 0,
+   "severe": 0,
+   "medianMs": 1.4,
+   "rdkitWithCrossingsPct": 0,
+   "rdkitMeanCrossings": 0
+  },
+  "16-30": {
+   "n": 121,
+   "withCrossingsPct": 2.5,
+   "meanCrossings": 0.09,
+   "meanClosePairs": 0.27,
+   "severe": 0,
+   "medianMs": 10.5,
+   "rdkitWithCrossingsPct": 1.7,
+   "rdkitMeanCrossings": 0.05
+  },
+  "31-50": {
+   "n": 66,
+   "withCrossingsPct": 13.6,
+   "meanCrossings": 0.21,
+   "meanClosePairs": 0.67,
+   "severe": 0,
+   "medianMs": 36.1,
+   "rdkitWithCrossingsPct": 0,
+   "rdkitMeanCrossings": 0
+  },
+  "51-80": {
+   "n": 74,
+   "withCrossingsPct": 32.4,
+   "meanCrossings": 0.57,
+   "meanClosePairs": 1.61,
+   "severe": 0,
+   "medianMs": 261.3,
+   "rdkitWithCrossingsPct": 0,
+   "rdkitMeanCrossings": 0
+  },
+  "81+": {
+   "n": 6,
+   "withCrossingsPct": 66.7,
+   "meanCrossings": 5.33,
+   "meanClosePairs": 10.5,
+   "severe": 0,
+   "medianMs": 666.1,
+   "rdkitWithCrossingsPct": 33.3,
+   "rdkitMeanCrossings": 1.33
+  }
+ },
+ "totals": {
+  "crossings": 99,
+  "closePairs": 259,
+  "severe": 0
+ },
+ "worst": [
+  {
+   "file": "AM1CCSitr.rxn",
+   "atoms": 86,
+   "crossings": 21,
+   "closePairs": 36
+  },
+  {
+   "file": "BGAL2l.rxn",
+   "atoms": 81,
+   "crossings": 6,
+   "closePairs": 10
+  },
+  {
+   "file": "FAOXC16180m.rxn",
+   "atoms": 53,
+   "crossings": 5,
+   "closePairs": 8
+  },
+  {
+   "file": "CLDCOHOX.rxn",
+   "atoms": 21,
+   "crossings": 5,
+   "closePairs": 3
+  },
+  {
+   "file": "CLDCOHOX.rxn",
+   "atoms": 21,
+   "crossings": 5,
+   "closePairs": 3
+  },
+  {
+   "file": "FUCGALFUCGALACGLCGALGLUSIDEt.rxn",
+   "atoms": 102,
+   "crossings": 4,
+   "closePairs": 11
+  },
+  {
+   "file": "KSItly.rxn",
+   "atoms": 66,
+   "crossings": 4,
+   "closePairs": 4
+  },
+  {
+   "file": "RE3344X.rxn",
+   "atoms": 71,
+   "crossings": 3,
+   "closePairs": 5
+  },
+  {
+   "file": "CHAC3OXRED.rxn",
+   "atoms": 48,
+   "crossings": 3,
+   "closePairs": 3
+  },
+  {
+   "file": "CHAC3OXRED.rxn",
+   "atoms": 48,
+   "crossings": 2,
+   "closePairs": 7
+  }
+ ],
+ "moduleSet": "engine",
+ "repair": true
+}

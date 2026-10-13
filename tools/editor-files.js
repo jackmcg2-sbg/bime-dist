@@ -62,6 +62,22 @@ var FILES = [
     'FocusLens.js',
 ];
 
+// v3.2.0 (ADR-0001): every FILES entry is either an engine module or a UI
+// module. Node consumers (tests/shim.js, hence the CLI and maintainer tools)
+// load ENGINE_FILES so they run the same layout as the browser. A new editor
+// module is engine by default; add it to UI_FILES only if it is UI-only.
+var UI_FILES = [
+    'Renderer.js',
+    'Tools.js',
+    'MolEditor.js',
+    'PageFormats.js',
+    'CanvasView.js',
+    'CanvasSurface.js',
+    'FocusLens.js'
+];
+
+var ENGINE_FILES = FILES.filter(function (file) { return UI_FILES.indexOf(file) === -1; });
+
 function scriptTags(version) {
     return FILES.map(function (file) {
         var suffix = version ? '?v=' + version : '';
@@ -71,5 +87,7 @@ function scriptTags(version) {
 
 module.exports = {
     FILES: FILES,
+    UI_FILES: UI_FILES,
+    ENGINE_FILES: ENGINE_FILES,
     scriptTags: scriptTags
 };

@@ -24,6 +24,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   spot below it, so they no longer overlap each other, labels or bonds, except
   where the 2D layout itself crowds atoms together. Bonds now stop clear of
   labels. Single-molecule SVG export is unchanged.
+- **Folded-back chains are repaired in 2D layout.** After placement, layout
+  now removes bond crossings and atom clashes caused by chains or branches
+  folded back over the molecule. It moves whole branches rigidly about
+  non-ring single bonds; ring shapes and stereochemistry are untouched. It
+  applies to every layout: the editor, all image exports and the command line.
+  On a sample of 367 metabolites, molecules of 51–80 atoms with a crossing fall
+  from 85% to 32%, and total crossings by about 92%. Layout of large molecules
+  is slower (about 3× for 50+ atoms); whole reaction figures are not.
+- **The command line and tests run the browser's layout engine.** Node now
+  loads every non-UI editor module (`tools/editor-files.js` `ENGINE_FILES`;
+  ADR-0001). Previously the CLI skipped ring templates, crossing reduction and
+  SDG refinement. A pre-built binary missing these modules prints a warning.
+
+### Fixed
+
+- **Cis double bonds drawn trans from the command line.** CLI figures now draw
+  every specified cis/trans double bond as specified (see the engine change
+  above).
+- **Inverted wedges.** Wedge vs hash is now chosen from the drawn geometry, so
+  each stereocentre reads as its input configuration. About half of the
+  stereocentres were drawn inverted before, in the browser too.
+- **Cis/trans correction on trisubstituted and distorted double bonds.** A
+  mis-drawn double bond is corrected by flipping its whole end, and an end the
+  layout flattened is restored to a 120° fan first. A double bond inside a
+  macrocycle may still have one cramped end (docs/known-defects.md).
 
 ## [3.0.3] — 2026-07-12
 

@@ -169,6 +169,10 @@ Atom labels and map numbers are contrast-checked against the colour beneath
 them: a label that is already readable gets no background box, and a faint one is
 darkened within its own hue. Each map number is placed at the least-cluttered spot
 around its atom, clear of other numbers, labels and bonds.
+The CLI lays molecules out with the same engine as the browser, including
+cis/trans correction, geometry-correct wedges and the fold-back repair that
+untangles chains drawn back across the molecule, so a figure from `bime` matches
+the workbench.
 
 ```bash
 bime aam 'CCO.CC(=O)O>>CCOC(=O)C.O' --format svg --out esterification.svg
